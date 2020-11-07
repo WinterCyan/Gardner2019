@@ -17,6 +17,13 @@ def lightregion_to_param(img):
 def get_fitted_ellipse(region, width, height):
     #  region: [N,2]
     region = np.asarray(region)  # convert to array
+    #  in rectangle
+    arg_min_x, arg_min_y = np.argmin(region, axis=0)
+    arg_max_x, arg_max_y = np.argmax(region, axis=0)
+    top_corner = region[arg_min_x][0]
+    left_corner = region[arg_min_y][1]
+    bottom_corner = region[arg_max_x][0]
+    right_corner = region[arg_max_y][1]
     #  to sphere coordinates
     region_size = region.shape[0]
     rows = region[:, 0]
@@ -32,21 +39,22 @@ def get_fitted_ellipse(region, width, height):
     left = new_region[arg_min_y][1]
     bottom = new_region[arg_max_x][0]
     right = new_region[arg_max_y][1]
-    return [left, right, bottom, top]
+    return {"sphere":[left, right, bottom, top], "rectangle":[left_corner, right_corner, bottom_corner, top_corner]}
 
 
-def draw_rectangle(state_map, corners):
-    x_max, y_max, x_min, y_min = corners
-    for col in range(x_min, x_max+1):
-        state_map[col, y_min] = 3
-        state_map[col, y_max] = 3
-    for row in range(y_min, y_max+1):
-        state_map[x_min, row] = 3
-        state_map[x_max, row] = 3
+def draw_rectangle(state_map, corners, frame_value):
+    print("corners: ", corners)
+    left_corner, right_corner, bottom_corner, top_corner = corners
+    for col in range(left_corner, right_corner+1):
+        state_map[bottom_corner, col] = frame_value
+        state_map[top_corner, col] = frame_value
+    for row in range(top_corner, bottom_corner+1):
+        state_map[row, left_corner] = frame_value
+        state_map[row, right_corner] = frame_value
 
 
 if __name__ == "__main__":
-    img = Image.open("C:\\Desktop\\drawlight.png", mode='r')
+    img = Image.open("../Files/pano.jpg", mode='r')
     img_array = np.asarray(img)[:, :, 0]
 
     # state_map: 2 for lights areas, 0 for others

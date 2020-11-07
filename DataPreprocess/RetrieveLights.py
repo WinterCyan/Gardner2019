@@ -20,7 +20,9 @@ def find_peak(img, state_map):
 def region_growth(img, state_map, percentage):
     border_list = []
     new_border_list = []
+    height, width = img.shape
     seed, peak = find_peak(img, state_map)
+    print(peak)
     # state_map = np.zeros(shape=img.shape, dtype=int)
     state_map[seed[0], seed[1]] = 1
     new_border_list.append(seed)
@@ -35,6 +37,9 @@ def region_growth(img, state_map, percentage):
             x, y = p
             for i in range(-1, 2):
                 for j in range(-1, 2):
+                    if x+i < 0 or x+j >= height or y+j < 0 or y+j >= width:
+                        # print(x+i, y+j)
+                        continue
                     if (not(i == 0 and j == 0)) and state_map[x+i, y+j] == 0 and img[x+i, y+j] >= peak*percentage:
                         new_border_list.append([x+i, y+j])
                         state_map[x+i, y+j] = 1
@@ -46,6 +51,9 @@ def region_growth(img, state_map, percentage):
                 is_inner = True
                 for i in range(-1, 2):
                     for j in range(-1, 2):
+                        if x + i < 0 or x + j >= height or y + j < 0 or y + j >= width:
+                            # print(x+i, y+j)
+                            continue
                         if state_map[p[0]+i, p[1]+j] == 0:
                             is_inner = False
                 if not is_inner:
