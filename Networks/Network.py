@@ -173,6 +173,7 @@ class ParamLENet(nn.Module):
         out = F.relu(features, inplace=True)
         out = F.adaptive_avg_pool2d(out, (1, 1))  # output: 1*1, average pooling over full feature map
         out = torch.flatten(out, 1)  # flatten: keep some dims and merge the others
+        #  replace the classifier with two FC layers
         latent_vec = self.latent(out)
         decode_vec = self.decoder(latent_vec)
         d = self.d_out(decode_vec)
@@ -187,6 +188,7 @@ if __name__ == '__main__':
     pretrained_densenet121 = torch.hub.load('pytorch/vision:v0.6.0', 'densenet121', pretrained=True)
     pretrained_densenet121_dict = pretrained_densenet121.state_dict()
     paramlenet = ParamLENet()
+    init_paramlenet = ParamLENet()
     paramlenet_dict = paramlenet.state_dict()
     shared_weights = {k:v for k, v in pretrained_densenet121_dict.items() if k in paramlenet_dict}
     paramlenet_dict.update(shared_weights)
@@ -205,7 +207,7 @@ if __name__ == '__main__':
     # for k, v in my_dict.items():
     #     print(k)
 
-    # input_img = Image.open('dog.jpg')
+    # input_img = Image.open('../Files/dog.jpg')
     # preprocess = transforms.Compose([
     #     transforms.Resize(256),
     #     transforms.CenterCrop(224),
@@ -215,6 +217,9 @@ if __name__ == '__main__':
     # input_tensor = preprocess(input_img)
     # input_batch = input_tensor.unsqueeze(0)
     # input_batch = input_batch.to('cuda')
-    # my_net.to('cuda')
-    # d, l, s, c, a = my_net(input_batch)
+    # paramlenet.to('cuda')
+    # d, l, s, c, a = paramlenet(input_batch)
+    # init_paramlenet.to('cuda')
+    # d2, l2, s2, c2, a2 = init_paramlenet(input_batch)
     # print(d, l, s, c, a)
+    # print(d2, l2, s2, c2, a2)

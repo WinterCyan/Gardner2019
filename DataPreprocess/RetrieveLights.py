@@ -4,27 +4,28 @@ from PIL import Image
 from matplotlib import pyplot as plt
 
 
-def find_peak(img):
+def find_peak(img, state_map):
     peak = 0
     p = []
     width = img.shape[0]
     height = img.shape[1]
     for row in range(width):
         for col in range(height):
-            if img[row, col] > peak:
+            if img[row, col] > peak and state_map[row, col] == 0:
                 peak = img[row, col]
                 p = [row, col]
     return p, peak
 
 
-def region_growth(img):
+def region_growth(img, state_map, percentage):
     border_list = []
     new_border_list = []
-    init_seed, peak = find_peak(img)
-    state_map = np.zeros(shape=img.shape, dtype=int)
-    state_map[init_seed[0], init_seed[1]] = 1
-    new_border_list.append(init_seed)
+    seed, peak = find_peak(img, state_map)
+    # state_map = np.zeros(shape=img.shape, dtype=int)
+    state_map[seed[0], seed[1]] = 1
+    new_border_list.append(seed)
     changed = True
+    region = []
     while changed:
         changed = False
         border_list = new_border_list
@@ -34,10 +35,11 @@ def region_growth(img):
             x, y = p
             for i in range(-1, 2):
                 for j in range(-1, 2):
-                    if (not(i == 0 and j == 0)) and state_map[x+i, y+j] == 0 and img[x+i, y+j] >= peak*0.95:
+                    if (not(i == 0 and j == 0)) and state_map[x+i, y+j] == 0 and img[x+i, y+j] >= peak*percentage:
                         new_border_list.append([x+i, y+j])
                         state_map[x+i, y+j] = 1
                         state_map[x, y] = 2
+                        region.append(p)
                         has_new_light_neighbor = True
                         changed = True
             if not has_new_light_neighbor:
@@ -50,18 +52,20 @@ def region_growth(img):
                     new_border_list.append(p)
                 else:
                     state_map[p[0], p[1]] = 2
-    return border_list, state_map
+                    region.append(p)
+    for p in border_list:
+        state_map[p[0], p[1]] = 2
+        region.append(p)
+    return state_map, region
 
 
-if __name__ == "__main__":
-    img = Image.open("C:\\Desktop\\l2.jpg", mode='r')
-    img_array = np.asarray(img)[:, :, 0]
+def retrieve_lights(img, count, percentage):
+    state_map = np.zeros(shape=img.shape, dtype=int)
+    regions = []
+    for i in range(count):
+        out_state_map, region = region_growth(img, state_map, percentage)
+        state_map = out_state_map
+        regions.append(region)
+    return state_map, regions
 
-    border_list, state_map = region_growth(img_array)
 
-    fig = plt.figure()
-    fig.add_subplot(1, 2, 1)
-    plt.imshow(img_array, cmap='gray')
-    fig.add_subplot(1, 2, 2)
-    plt.imshow(state_map)
-    plt.show()
