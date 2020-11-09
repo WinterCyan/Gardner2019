@@ -144,14 +144,6 @@ class ParamLENet(nn.Module):
         # # Linear layer
         # self.classifier = nn.Linear(num_features, num_classes)
 
-        # latent vector layer
-        # self.features.add_module('latent', nn.Linear(num_features, latent_size))
-        self.latent = nn.Linear(num_features, latent_size)
-
-        # decode_layer
-        # self.features.add_module('decode', nn.Linear(latent_size, decode_size))
-        self.decoder = nn.Linear(latent_size, decode_size)
-
         # Official init from torch repo.
         # for m in self.modules():
         #     if isinstance(m, nn.Conv2d):
@@ -161,6 +153,14 @@ class ParamLENet(nn.Module):
         #         nn.init.constant_(m.bias, 0)
         #     elif isinstance(m, nn.Linear):
         #         nn.init.constant_(m.bias, 0)
+
+        # latent vector layer
+        # self.features.add_module('latent', nn.Linear(num_features, latent_size))
+        self.latent = nn.Linear(num_features, latent_size)
+
+        # decode_layer
+        # self.features.add_module('decode', nn.Linear(latent_size, decode_size))
+        self.decoder = nn.Linear(latent_size, decode_size)
 
         self.d_out = nn.Linear(decode_size, num_lights)
         self.l_out = nn.Linear(decode_size, 3*num_lights)

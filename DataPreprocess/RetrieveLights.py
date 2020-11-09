@@ -1,4 +1,5 @@
 import numpy as np
+from DataPreprocess.LightsToParam import *
 from PIL import Image
 # from matplotlib import image
 from matplotlib import pyplot as plt
@@ -67,6 +68,29 @@ def region_growth(img, state_map, percentage):
     return state_map, region
 
 
+def overlap_elimination(regions, width, height):
+    sizes = [len(region) for region in regions]  # region area
+    size_order = np.argsort(sizes)  # small -> big
+    min_region = regions[size_order[0]]
+    mid_region = regions[size_order[1]]
+    max_region = regions[size_order[2]]
+    min_rectangle_corners = get_fitted_ellipse(min_region, width, height)
+    mid_rectangle_corners = get_fitted_ellipse(mid_region, width, height)
+    max_rectangle_corners = get_fitted_ellipse(max_region, width, height)
+
+    def inside(small_corners, big_corners):
+        ls, rs, bs, ts = small_corners
+        lb, rb, bb, tb = big_corners
+        if ls>=lb and rs<=rb and bs<=bb and ts>=tb: return True
+        else: return False
+
+    if inside(min_rectangle_corners, mid_rectangle_corners) or inside(min_rectangle_corners, max_rectangle_corners):  # remove smallest one
+        regions.remove(min_region)
+    if inside(mid_rectangle_corners, max_rectangle_corners):  # remove the second smallest one, in the case that 3 regions are overlapped together
+        regions.remove(mid_region)
+    return regions
+
+
 def retrieve_lights(img, count, percentage):
     state_map = np.zeros(shape=img.shape, dtype=int)
     regions = []
@@ -74,6 +98,8 @@ def retrieve_lights(img, count, percentage):
         out_state_map, region = region_growth(img, state_map, percentage)
         state_map = out_state_map
         regions.append(region)
-    return state_map, regions
+    simplest_regions = overlap_elimination(regions, img.shape[1], img.shape[0])  # eliminate overlapped regions
+    print("region number: ", len(simplest_regions))
+    return state_map, simplest_regions
 
 
