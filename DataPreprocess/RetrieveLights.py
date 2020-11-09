@@ -8,6 +8,8 @@ from matplotlib import pyplot as plt
 WIDTH = 7768
 HEIGHT = 3884
 
+# WIDTH = 2048
+# HEIGHT = 1024
 
 def find_peak(img, state_map):
     peak = 0

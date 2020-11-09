@@ -7,7 +7,6 @@ import numpy as np
 from PIL import Image
 from matplotlib import pyplot as plt
 from scipy.ndimage.filters import gaussian_filter
-from DataPreprocess.LightsToParam import *
 from DataPreprocess.RetrieveLights import *
 
 GAUSSIAN_KERNEL_SIZE = 35
@@ -18,7 +17,6 @@ def exr2array(file_dir):
     data = OpenEXR.InputFile(file_dir)
     data_window = data.header()['dataWindow']
     size = (data_window.max.x - data_window.min.x + 1, data_window.max.y - data_window.min.y + 1)
-    print(size)
     r_str = data.channel('R', pixel_type)
     r_data = np.frombuffer(r_str, dtype=np.float32)
     r_data.shape = (size[1], size[0])
@@ -62,32 +60,36 @@ def exr2jpg(file_dir, jpg_dir):
     Image.merge("RGB", rgb8).save(jpg_dir, "JPEG", quality=95)
 
 
-def print_result(file_name):
-    rgb_data = exr2array(file_name)
+def write_result(hdr_file_name, param_file_name):
+    rgb_data = exr2array(hdr_file_name)
     gray_data = rgb2gray(rgb_data)
-    jpg_rgb_data = np.asarray(Image.open(file_name.replace(".exr", ".jpg")))
+    # jpg_rgb_data = np.asarray(Image.open(hdr_file_name.replace(".exr", ".jpg")))
 
     # state_map: 2 for lights areas, 0 for others
     # regions: array of region, region is array of coords of light pixels
     state_map, regions = retrieve_lights(gray_data, count=3, percentage=0.333)
     param = get_parametric_lights(rgb_data, regions)
+    plt.imsave(hdr_file_name.replace(".exr", "_state.jpg"), state_map)
+    f = open(param_file_name, "a")
+    hdr_file_justname = hdr_file_name.split("/")[-1]
+    print(hdr_file_justname)
     print(param)
-
-    fig = plt.figure()
-    fig.add_subplot(1, 2, 1)
-    plt.imshow(jpg_rgb_data)
-    fig.add_subplot(1, 2, 2)
-    plt.imshow(state_map)
-    plt.show()
+    f.write("file_"+hdr_file_justname+"\n")
+    for item in param:
+        f.write("light\n")
+        for p in item:
+            f.write(p.__str__()+"\n")
+    f.close()
 
 
 if __name__ == '__main__':
     dataset_dir = "/home/winter/Documents/HDR_Dataset/"
+    # dataset_dir = "/home/winter/Downloads/IndoorHDRDatasetPreview/100samplesDataset/"
+    param_file = "/home/winter/Documents/results/param_result.txt"
     # single_file = "../Files/9C4A9627-545d0bdbb0.exr"
     exr_files = [f for f in listdir(dataset_dir) if isfile(join(dataset_dir, f)) and f.endswith(".exr")]
     for file in exr_files:
         exr2jpg(join(dataset_dir, file), join(dataset_dir, file.replace(".exr", ".jpg")))
-        print(file)
-        print_result(join(dataset_dir, file))
+        write_result(join(dataset_dir, file), param_file)
     # exr2jpg(single_file, single_file.replace(".exr", ".jpg"))
     # print_result(single_file)
