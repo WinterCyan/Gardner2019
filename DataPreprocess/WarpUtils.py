@@ -1,4 +1,5 @@
 import math
+import numpy as np
 #  define pano's warp operation
 #  input: pano with depth annotation & a pixel in target location
 #  output: new pano
@@ -18,4 +19,4 @@ def theta_phi2xyz(theta, phi):
     x = math.sin(theta)*math.sin(phi)
     y = math.cos(theta)
     z = math.sin(theta)*math.cos(phi)
-    return x, y, z
+    return np.array((x, y, z))
