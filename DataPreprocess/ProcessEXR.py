@@ -8,9 +8,7 @@ from PIL import Image
 from matplotlib import pyplot as plt
 from scipy.ndimage.filters import gaussian_filter
 from DataPreprocess.RetrieveLights import *
-
-GAUSSIAN_KERNEL_SIZE = 35
-pixel_type = Imath.PixelType(Imath.PixelType.FLOAT)
+from DataPreprocess.Consts import *
 
 
 def exr2array(file_dir):
@@ -75,21 +73,18 @@ def write_result(hdr_file_name, param_file_name):
     print(hdr_file_justname)
     print(param)
     f.write("file_"+hdr_file_justname+"\n")
-    for item in param:
+    for light in param:
         f.write("light\n")
-        for p in item:
+        for p in light:
             f.write(p.__str__()+"\n")
     f.close()
+    print('------------------------------------')
 
 
 if __name__ == '__main__':
-    dataset_dir = "/home/winter/Documents/HDR_Dataset/"
-    # dataset_dir = "/home/winter/Downloads/IndoorHDRDatasetPreview/100samplesDataset/"
-    param_file = "/home/winter/Documents/results/param_result.txt"
-    # single_file = "../Files/9C4A9627-545d0bdbb0.exr"
-    exr_files = [f for f in listdir(dataset_dir) if isfile(join(dataset_dir, f)) and f.endswith(".exr")]
+    exr_files = [f for f in listdir(hdr_dataset_dir) if isfile(join(hdr_dataset_dir, f)) and f.endswith(".exr")]
     for file in exr_files:
-        exr2jpg(join(dataset_dir, file), join(dataset_dir, file.replace(".exr", ".jpg")))
-        write_result(join(dataset_dir, file), param_file)
+        exr2jpg(join(hdr_dataset_dir, file), join(hdr_dataset_dir, file.replace(".exr", ".jpg")))
+        write_result(join(hdr_dataset_dir, file), param_file)
     # exr2jpg(single_file, single_file.replace(".exr", ".jpg"))
-    # print_result(single_file)
+    # write_result(single_file, param_file)

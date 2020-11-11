@@ -3,13 +3,8 @@ from DataPreprocess.WarpUtils import *
 from PIL import Image
 # from matplotlib import image
 from matplotlib import pyplot as plt
+from DataPreprocess.Consts import *
 
-
-WIDTH = 7768
-HEIGHT = 3884
-
-# WIDTH = 2048
-# HEIGHT = 1024
 
 def find_peak(img, state_map):
     peak = 0
@@ -127,6 +122,13 @@ def overlap_elimination(regions):
             return True
         else: return False
 
+    if inside(min_rectangle_corners, mid_rectangle_corners) and inside(mid_rectangle_corners, max_rectangle_corners):
+        max_region.extend(min_region)
+        max_region.extend(mid_region)
+        regions.remove(min_region)
+        regions.remove(mid_region)
+        return regions
+
     if inside(min_rectangle_corners, mid_rectangle_corners):
         mid_region.extend(min_region)
         regions.remove(min_region)
@@ -136,6 +138,7 @@ def overlap_elimination(regions):
     if inside(mid_rectangle_corners, max_rectangle_corners):  # remove the second smallest one, in the case that 3 regions are overlapped together
         max_region.extend(mid_region)
         regions.remove(mid_region)
+
     return regions
 
 
