@@ -72,19 +72,60 @@ def write_result(hdr_file_name, param_file_name):
     hdr_file_justname = hdr_file_name.split("/")[-1]
     print(hdr_file_justname)
     print(param)
-    f.write("file_"+hdr_file_justname+"\n")
+    f.write("file_"+hdr_file_justname+";")
     for light in param:
-        f.write("light\n")
+        f.write("light:")
         for p in light:
-            f.write(p.__str__()+"\n")
+            f.write(p.__str__()+",")
+        f.write(";")
+    f.write('\n')
     f.close()
     print('------------------------------------')
 
 
+def read_result(param_file, hdr_name):
+    file = open(param_file, "r")
+    while True:
+        line = file.readline()
+        if line.split(';')[0].split('_')[1] == hdr_name:
+            num_light = len(line.split(';'))-2
+            print(num_light)
+            param = []
+            light_param = []
+            for i in range(num_light):
+                light_param_str = line.split(';')[i+1].split(':')[1]
+                l = light_param_str.split(',')[0]
+                s = light_param_str.split(',')[1]
+                c = light_param_str.split(',')[2]
+                light_param = [l, s, c]
+                param.append(light_param)
+            return param
+        else:
+            continue
+
+
+def text_param2list_param(param):
+    list_param = []
+    for light_param in param:
+        l = light_param[0]
+        s = light_param[1]
+        c = light_param[2]
+
+
+
 if __name__ == '__main__':
-    exr_files = [f for f in listdir(hdr_dataset_dir) if isfile(join(hdr_dataset_dir, f)) and f.endswith(".exr")]
-    for file in exr_files:
-        exr2jpg(join(hdr_dataset_dir, file), join(hdr_dataset_dir, file.replace(".exr", ".jpg")))
-        write_result(join(hdr_dataset_dir, file), param_file)
+    # exr_files = [f for f in listdir(hdr_dataset_dir) if isfile(join(hdr_dataset_dir, f)) and f.endswith(".exr")]
+    # for file in exr_files:
+    #     exr2jpg(join(hdr_dataset_dir, file), join(hdr_dataset_dir, file.replace(".exr", ".jpg")))
+    #     write_result(join(hdr_dataset_dir, file), param_file)
     # exr2jpg(single_file, single_file.replace(".exr", ".jpg"))
     # write_result(single_file, param_file)
+
+    param = read_result(param_file, "9C4A1707-0f4b3a9a59.exr")
+    print(len(param))
+    l1 = param[0]
+    l = l1[0]
+    s = l1[1]
+    c = l1[2]
+    print(l, s, c)
+    l = np.fromstring(l.split('[')[1].split(']')[0], dtype=float, sep=' ')

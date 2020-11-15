@@ -11,7 +11,7 @@ def warp(pano, target_loc):
 
 def row_col2theta_phi(row, col, width, height):
     theta = ((row+0.5)/height)*math.pi
-    phi = ((col+0.5)/width - 0.5)*2.0*math.pi
+    phi = (0.5 - (col+0.5)/width)*2.0*math.pi
     return theta, phi
 
 

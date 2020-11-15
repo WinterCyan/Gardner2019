@@ -132,7 +132,7 @@ def overlap_elimination(regions):
     if inside(min_rectangle_corners, mid_rectangle_corners):
         mid_region.extend(min_region)
         regions.remove(min_region)
-    if inside(min_rectangle_corners, max_rectangle_corners):  # remove smallest one
+    elif inside(min_rectangle_corners, max_rectangle_corners):  # remove smallest one
         max_region.extend(min_region)
         regions.remove(min_region)
     if inside(mid_rectangle_corners, max_rectangle_corners):  # remove the second smallest one, in the case that 3 regions are overlapped together
@@ -160,7 +160,7 @@ def get_parametric_lights(rgb_img_data, regions):
         corners = get_fitted_ellipse(region)["sphere"]
         center = [(corners[2]+corners[3])/2.0, (corners[0]+corners[1])/2.0]  # phi, theta
         s = (abs(corners[1]-corners[0]) + abs(corners[2]-corners[3]))/2.0
-        l = theta_phi2xyz(center[1], center[0])
+        l = theta_phi2xyz(center[0], center[1])
         r = 0
         g = 0
         b = 0
