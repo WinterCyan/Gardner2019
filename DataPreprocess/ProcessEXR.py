@@ -11,8 +11,8 @@ from DataPreprocess.RetrieveLights import *
 from DataPreprocess.Consts import *
 
 
-def exr2array(file_dir):
-    data = OpenEXR.InputFile(file_dir)
+def exr2array(full_file_name):
+    data = OpenEXR.InputFile(full_file_name)
     data_window = data.header()['dataWindow']
     size = (data_window.max.x - data_window.min.x + 1, data_window.max.y - data_window.min.y + 1)
     r_str = data.channel('R', pixel_type)
@@ -46,8 +46,8 @@ def tone_mapping(rgb_data):
     return gamma_correction
 
 
-def exr2jpg(file_dir, jpg_dir):
-    data = OpenEXR.InputFile(file_dir)
+def exr2jpg(full_file_name, full_jpg_name):
+    data = OpenEXR.InputFile(full_file_name)
     data_window = data.header()['dataWindow']
     size = (data_window.max.x - data_window.min.x + 1, data_window.max.y - data_window.min.y + 1)
     rgbf = [np.frombuffer(data.channel(c, pixel_type), dtype=np.float32) for c in 'RGB']
@@ -55,11 +55,11 @@ def exr2jpg(file_dir, jpg_dir):
         rgbf[i] = np.where(rgbf[i] <= 0.0031308, (rgbf[i] * 12.92) * 255.0,
                            (1.055 * (rgbf[i] ** (1.0 / 2.2)) - 0.055) * 255.0)
     rgb8 = [Image.frombytes("F", size, c.tobytes()).convert("L") for c in rgbf]
-    Image.merge("RGB", rgb8).save(jpg_dir, "JPEG", quality=95)
+    Image.merge("RGB", rgb8).save(full_jpg_name, "JPEG", quality=95)
 
 
-def write_result(hdr_file_name, param_file_name):
-    rgb_data = exr2array(hdr_file_name)
+def write_result(hdr_file_name, param_full_file_name):
+    rgb_data = exr2array(hdr_dataset_dir+hdr_file_name)
     gray_data = rgb2gray(rgb_data)
     # jpg_rgb_data = np.asarray(Image.open(hdr_file_name.replace(".exr", ".jpg")))
 
@@ -67,12 +67,11 @@ def write_result(hdr_file_name, param_file_name):
     # regions: array of region, region is array of coords of light pixels
     state_map, regions = retrieve_lights(gray_data, count=3, percentage=0.333)
     param = get_parametric_lights(rgb_data, regions)
-    plt.imsave(hdr_file_name.replace(".exr", "_state.jpg"), state_map)
-    f = open(param_file_name, "a")
-    hdr_file_justname = hdr_file_name.split("/")[-1]
-    print(hdr_file_justname)
+    plt.imsave(light_masks_dir+hdr_file_name.replace(".exr", "_light_mask.jpg"), state_map)
+    f = open(param_full_file_name, "a")
+    print(hdr_file_name)
     print(param)
-    f.write("file_"+hdr_file_justname+";")
+    f.write("file_"+hdr_file_name+";")
     for light in param:
         f.write("light:")
         for p in light:
@@ -83,15 +82,16 @@ def write_result(hdr_file_name, param_file_name):
     print('------------------------------------')
 
 
-def read_result(param_file, hdr_name):
-    file = open(param_file, "r")
+def read_result(param_file_full_name, hdr_file_name):
+    file = open(param_file_full_name, "r")
     while True:
         line = file.readline()
-        if line.split(';')[0].split('_')[1] == hdr_name:
+        if line == '':
+            print("result for {} not found.".format(hdr_file_name))
+            return None
+        if line.split(';')[0].split('_')[1] == hdr_file_name:
             num_light = len(line.split(';'))-2
-            print(num_light)
             param = []
-            light_param = []
             for i in range(num_light):
                 light_param_str = line.split(';')[i+1].split(':')[1]
                 l = light_param_str.split(',')[0]
@@ -106,26 +106,25 @@ def read_result(param_file, hdr_name):
 
 def text_param2list_param(param):
     list_param = []
-    for light_param in param:
-        l = light_param[0]
-        s = light_param[1]
-        c = light_param[2]
+    for light_text_param in param:
+        l_text = light_text_param[0]
+        s_text = light_text_param[1]
+        c_text = light_text_param[2]
+        l = np.fromstring(l_text.split('[')[1].split(']')[0], dtype=float, sep=' ')
+        s = float(s_text)
+        c = np.fromstring(c_text.split('[')[1].split(']')[0], dtype=float, sep=' ')
+        light_param = [l, s, c]
+        list_param.append(light_param)
+    return list_param
 
 
 
 if __name__ == '__main__':
-    # exr_files = [f for f in listdir(hdr_dataset_dir) if isfile(join(hdr_dataset_dir, f)) and f.endswith(".exr")]
-    # for file in exr_files:
-    #     exr2jpg(join(hdr_dataset_dir, file), join(hdr_dataset_dir, file.replace(".exr", ".jpg")))
-    #     write_result(join(hdr_dataset_dir, file), param_file)
-    # exr2jpg(single_file, single_file.replace(".exr", ".jpg"))
-    # write_result(single_file, param_file)
+    exr_files = [f for f in listdir(hdr_sample_dir) if isfile(join(hdr_dataset_dir, f)) and f.endswith(".exr")]
+    for file in exr_files:
+        exr2jpg(hdr_dataset_dir+file, hdr_jpgs_dir+file.replace(".exr", ".jpg"))
+        write_result(file, light_param_file)
 
-    param = read_result(param_file, "9C4A1707-0f4b3a9a59.exr")
-    print(len(param))
-    l1 = param[0]
-    l = l1[0]
-    s = l1[1]
-    c = l1[2]
-    print(l, s, c)
-    l = np.fromstring(l.split('[')[1].split(']')[0], dtype=float, sep=' ')
+    # param = read_result(light_param_file, file_name)
+    # list_param = text_param2list_param(param)
+    # print(list_param)
