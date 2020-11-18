@@ -6,6 +6,8 @@ from DataPreprocess.WarpUtils import *
 WIDTH = 7768
 HEIGHT = 3884
 
+SIZE_CROP = 1726
+
 # WIDTH = 2048
 # HEIGHT = 1024
 

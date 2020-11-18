@@ -1,14 +1,9 @@
 import OpenEXR
-import Imath
 from os import listdir
 from os.path import isfile, join
-import array
-import numpy as np
-from PIL import Image
-from matplotlib import pyplot as plt
 from scipy.ndimage.filters import gaussian_filter
 from DataPreprocess.RetrieveLights import *
-from DataPreprocess.Consts import *
+from DataPreprocess.SphericalGaussian import *
 
 
 def exr2array(full_file_name):
@@ -120,11 +115,28 @@ def text_param2list_param(param):
 
 
 if __name__ == '__main__':
-    exr_files = [f for f in listdir(hdr_sample_dir) if isfile(join(hdr_dataset_dir, f)) and f.endswith(".exr")]
+    exr_files = [f for f in listdir(hdr_dataset_dir) if isfile(join(hdr_dataset_dir, f)) and f.endswith(".exr")]
     for file in exr_files:
-        exr2jpg(hdr_dataset_dir+file, hdr_jpgs_dir+file.replace(".exr", ".jpg"))
-        write_result(file, light_param_file)
+        # exr2jpg(hdr_dataset_dir+file, hdr_jpgs_dir+file.replace(".exr", ".jpg"))
+        # write_result(file, light_param_file)
 
-    # param = read_result(light_param_file, file_name)
-    # list_param = text_param2list_param(param)
-    # print(list_param)
+        text_param = read_result(light_param_file, file)
+        param = text_param2list_param(text_param)
+        render_sg(param, file)
+        print("rendered "+file)
+
+        # jpg_img = pltimg.imread(hdr_jpgs_dir+file.replace(".exr", ".jpg"))
+        # mask_img = pltimg.imread(light_masks_dir+file.replace(".exr", "_light_mask.jpg"))
+        # sg_img = pltimg.imread(light_sg_renderings_dir+file.replace(".exr", "_light_sg.jpg"))
+        # fig = plt.figure()
+        # fig.add_subplot(3, 1, 1)
+        # plt.axis('off')
+        # plt.imshow(jpg_img)
+        # fig.add_subplot(3, 1, 2)
+        # plt.axis('off')
+        # plt.imshow(mask_img)
+        # fig.add_subplot(3, 1, 3)
+        # plt.axis('off')
+        # plt.imshow(sg_img)
+        # plt.show()
+

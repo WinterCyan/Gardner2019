@@ -43,5 +43,9 @@ if __name__ == '__main__':
         data, scale = load_pfm(file_full_name)
         max_depth = np.amax(data)
         min_depth = np.amin(data)
-        data_gray = ((data-min_depth)/(max_depth-min_depth))*255.0
-        plt.imsave(file_full_name.replace(".pfm", ".jpg"), data_gray)
+        waist_line = data[int(data.shape[0]/2), data.shape[1]-5:data.shape[1]+5]
+        ave = np.average(data)
+        ave_waist = np.average(waist_line)
+        print(file+": ", max_depth, ave, ave_waist)
+        # data_gray = ((data-min_depth)/(max_depth-min_depth))*255.0
+        # plt.imsave(file_full_name.replace(".pfm", ".jpg"), data_gray)

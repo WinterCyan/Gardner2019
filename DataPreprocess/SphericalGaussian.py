@@ -1,7 +1,3 @@
-import numpy as np
-from numpy import array
-from DataPreprocess.WarpUtils import *
-from DataPreprocess.ProcessEXR import *
 from matplotlib import pyplot as plt
 from DataPreprocess.Consts import *
 from os.path import isfile
