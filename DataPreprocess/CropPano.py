@@ -17,15 +17,13 @@ from math import pi
 import numpy as np
 from os import listdir
 from os.path import isfile, join
-# from DataPreprocess.Consts import *
+from DataPreprocess.Consts import *
 import imageio as im
 
-WIDTH = 1024
-HEIGHT = 1024
 
 class NFOV():
-    def __init__(self, height=HEIGHT, width=WIDTH):
-        self.FOV = [0.72, 0.72]
+    def __init__(self, height=SIZE_CROP, width=SIZE_CROP):
+        self.FOV = [0.8, 0.8]
         # self.FOV = [0.38, 0.38]
         self.PI = pi
         self.PI_2 = pi * 0.5
@@ -119,19 +117,34 @@ class NFOV():
         return self._bilinear_interpolation(spericalCoord)
 
 
+def crop_center2row_col(center_point):
+    c1 = center_point[0]
+    c2 = center_point[1]
+    col = ((c1+0.5)/2.0) * WIDTH
+    row = c2*HEIGHT
+    row = max(0, min(HEIGHT-1,int(row)))
+    col = max(0, min(WIDTH-1,int(col)))
+    return row, col
+
+
 # test the class
 if __name__ == '__main__':
     # jpg_files = [f for f in listdir(hdr_jpgs_dir) if isfile(join(hdr_jpgs_dir, f)) and f.endswith(".jpg")]
     # file_index = random.randrange(0, len(jpg_files))
     # print(jpg_files[file_index])
     # img = im.imread(hdr_jpgs_dir+jpg_files[file_index])
-    img = im.imread("../Files/pano3.jpg")
+    img = im.imread("../Files/pano.jpg")
     nfov = NFOV()
-    center_point = np.array([0.0, .5])  # camera center point (valid range [0,1])
-    nfov.toNFOV(img, center_point)
-    center_point = np.array([0.25, .7])  # camera center point (valid range [0,1])
-    nfov.toNFOV(img, center_point)
-    center_point = np.array([0.5, .6])  # camera center point (valid range [0,1])
-    nfov.toNFOV(img, center_point)
-    center_point = np.array([0.75, .6])  # camera center point (valid range [0,1])
-    nfov.toNFOV(img, center_point)
+    c1 = 0.5  # range [0, 2)
+    c2 = 0.5  # range [0, 1], greater than 1: upward-down
+    for i in range(10):
+        c1 = np.random.uniform(low=0.0, high=2.0)
+        c2 = np.random.normal(loc=CROP_DISTRIB_MU, scale=CROP_DISTRIB_SIGMA)
+        print(c1, c2)
+        center_point = np.array([c1, c2])  # camera center point (valid range [0,2])
+        center_row, center_col = crop_center2row_col(center_point)
+        print("row, col of center: ", center_row, center_col)
+        print("theta, phi of center: ", row_col2theta_phi(center_row, center_col, WIDTH, HEIGHT))
+        nfov.toNFOV(img, center_point)
+    # center_point = np.array([c1, c2])  # camera center point (valid range [0,2])
+    # nfov.toNFOV(img, center_point)

@@ -1,10 +1,6 @@
-import math
-import numpy as np
 import random
+import math
 from DataPreprocess.Consts import *
-#  define pano's warp operation
-#  input: pano with depth annotation & a pixel in target location
-#  output: new pano
 
 
 def warp(pano, target_loc):
