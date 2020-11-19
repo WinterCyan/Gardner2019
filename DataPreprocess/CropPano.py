@@ -25,7 +25,7 @@ HEIGHT = 1024
 
 class NFOV():
     def __init__(self, height=HEIGHT, width=WIDTH):
-        self.FOV = [0.45, 0.45]
+        self.FOV = [0.72, 0.72]
         # self.FOV = [0.38, 0.38]
         self.PI = pi
         self.PI_2 = pi * 0.5
@@ -125,7 +125,7 @@ if __name__ == '__main__':
     # file_index = random.randrange(0, len(jpg_files))
     # print(jpg_files[file_index])
     # img = im.imread(hdr_jpgs_dir+jpg_files[file_index])
-    img = im.imread("../Files/pano.jpg")
+    img = im.imread("../Files/pano3.jpg")
     nfov = NFOV()
     center_point = np.array([0.0, .5])  # camera center point (valid range [0,1])
     nfov.toNFOV(img, center_point)
