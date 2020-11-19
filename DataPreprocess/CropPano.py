@@ -17,12 +17,16 @@ from math import pi
 import numpy as np
 from os import listdir
 from os.path import isfile, join
-from DataPreprocess.Consts import *
+# from DataPreprocess.Consts import *
 import imageio as im
+
+WIDTH = 1024
+HEIGHT = 1024
 
 class NFOV():
     def __init__(self, height=HEIGHT, width=WIDTH):
-        self.FOV = [.4, .4]
+        self.FOV = [0.45, 0.45]
+        # self.FOV = [0.38, 0.38]
         self.PI = pi
         self.PI_2 = pi * 0.5
         self.PI2 = pi * 2.0
@@ -31,10 +35,10 @@ class NFOV():
         self.screen_points = self._get_screen_img()
 
     def _get_coord_rad(self, isCenterPt, center_point=None):
-        return (center_point * 2 - 1) * np.array([self.PI, self.PI_2]) \
+        return (center_point * 2 - 1) * np.array([self.PI_2, self.PI_2]) \
             if isCenterPt \
             else \
-            (self.screen_points * 2 - 1) * np.array([self.PI, self.PI_2]) * (
+            (self.screen_points * 2 - 1) * np.array([self.PI_2, self.PI_2]) * (
                 np.ones(self.screen_points.shape) * self.FOV)
 
     def _get_screen_img(self):
@@ -117,14 +121,17 @@ class NFOV():
 
 # test the class
 if __name__ == '__main__':
-    jpg_files = [f for f in listdir(hdr_jpgs_dir) if isfile(join(hdr_jpgs_dir, f)) and f.endswith(".jpg")]
-    file_index = random.randrange(0, len(jpg_files))
-    print(jpg_files[file_index])
-    img = im.imread(hdr_jpgs_dir+jpg_files[file_index])
+    # jpg_files = [f for f in listdir(hdr_jpgs_dir) if isfile(join(hdr_jpgs_dir, f)) and f.endswith(".jpg")]
+    # file_index = random.randrange(0, len(jpg_files))
+    # print(jpg_files[file_index])
+    # img = im.imread(hdr_jpgs_dir+jpg_files[file_index])
+    img = im.imread("../Files/pano.jpg")
     nfov = NFOV()
-    center_point = np.array([0.0, .55])  # camera center point (valid range [0,1])
+    center_point = np.array([0.0, .5])  # camera center point (valid range [0,1])
     nfov.toNFOV(img, center_point)
-    center_point = np.array([0.5, .55])  # camera center point (valid range [0,1])
+    center_point = np.array([0.25, .7])  # camera center point (valid range [0,1])
     nfov.toNFOV(img, center_point)
-    center_point = np.array([1.0, .55])  # camera center point (valid range [0,1])
+    center_point = np.array([0.5, .6])  # camera center point (valid range [0,1])
+    nfov.toNFOV(img, center_point)
+    center_point = np.array([0.75, .6])  # camera center point (valid range [0,1])
     nfov.toNFOV(img, center_point)
