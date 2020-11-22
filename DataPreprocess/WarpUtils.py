@@ -26,3 +26,9 @@ def theta_phi2xyz(theta, phi):
     y = math.cos(theta)
     z = math.sin(theta)*math.cos(phi)
     return np.array((x, y, z))
+
+
+def xyz2theta_phi(x, y, _):
+    theta = math.acos(y)
+    phi = math.asin(x/math.sin(theta))
+    return theta, phi

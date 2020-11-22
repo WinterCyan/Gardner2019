@@ -155,6 +155,8 @@ def retrieve_lights(img, count, percentage):
 
 def get_parametric_lights(rgb_img_data, depth_data, regions):
     param=[]
+    depth_height, depth_width = depth_data.shape
+    print("depth shape: ", depth_width, depth_height)
     for region in regions:
         single_param = []
         corners = get_fitted_ellipse(region)["sphere"]
@@ -169,7 +171,7 @@ def get_parametric_lights(rgb_img_data, depth_data, regions):
             r = r + rgb_img_data[p[0], p[1], 0]
             g = g + rgb_img_data[p[0], p[1], 1]
             b = b + rgb_img_data[p[0], p[1], 2]
-            d = d + depth_data[p[0], p[1]]
+            d = d + depth_data[int(p[0]/HEIGHT*depth_height), int(p[1]/WIDTH*depth_width)]
         c = np.array([r, g, b])/len(region)
         d /= len(region)
         single_param.extend([l, s, c, d])  # single_param: [[l],[s],[c],[d]]

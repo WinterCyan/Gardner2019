@@ -6,8 +6,11 @@ from DataPreprocess.RetrieveLights import *
 from DataPreprocess.SphericalGaussian import *
 from DataPreprocess.ProcessPFM import *
 import Imath
+import cv2
+import imageio as im
 
 pixel_type = Imath.PixelType(Imath.PixelType.FLOAT)
+tonemap_drago = cv2.createTonemapDrago(2.2, 0.5)
 
 
 def exr2array(full_file_name):
@@ -45,23 +48,29 @@ def tone_mapping(rgb_data):
     return gamma_correction
 
 
-def exr2jpg(full_file_name, full_jpg_name):
-    data = OpenEXR.InputFile(full_file_name)
-    data_window = data.header()['dataWindow']
-    size = (data_window.max.x - data_window.min.x + 1, data_window.max.y - data_window.min.y + 1)
-    rgbf = [np.frombuffer(data.channel(c, pixel_type), dtype=np.float32) for c in 'RGB']
-    for i in range(3):
-        rgbf[i] = np.where(rgbf[i] <= 0.0031308, (rgbf[i] * 12.92) * 255.0,
-                           (1.055 * (rgbf[i] ** (1.0 / 2.2)) - 0.055) * 255.0)
-    rgb8 = [Image.frombytes("F", size, c.tobytes()).convert("L") for c in rgbf]
-    Image.merge("RGB", rgb8).save(full_jpg_name, "JPEG", quality=95)
+def exr2jpg(hdr_file_name, full_jpg_name):
+    exr_data = exr2array(hdr_dataset_dir+hdr_file_name)
+    im.imwrite(hdr_dataset_hdrformat_dir+hdr_dataset_dir.replace(".exr", ".hdr"), exr_data, format='hdr')
+    hdr_data = cv2.imread(hdr_dataset_hdrformat_dir+hdr_dataset_dir.replace(".exr", ".hdr"), cv2.IMREAD_ANYDEPTH)
+    ldrDurand = tonemap_drago.process(hdr_data)
+    ldr_8bit = np.clip(ldrDurand*255, 0, 255).astype('uint8')
+    cv2.imwrite(full_jpg_name, ldr_8bit)
+
+    # data = OpenEXR.InputFile(full_file_name)
+    # data_window = data.header()['dataWindow']
+    # size = (data_window.max.x - data_window.min.x + 1, data_window.max.y - data_window.min.y + 1)
+    # rgbf = [np.frombuffer(data.channel(c, pixel_type), dtype=np.float32) for c in 'RGB']
+    # for i in range(3):
+    #     rgbf[i] = np.where(rgbf[i] <= 0.0031308, (rgbf[i] * 12.92) * 255.0,
+    #                        (1.055 * (rgbf[i] ** (1.0 / 2.2)) - 0.055) * 255.0)
+    # rgb8 = [Image.frombytes("F", size, c.tobytes()).convert("L") for c in rgbf]
+    # Image.merge("RGB", rgb8).save(full_jpg_name, "JPEG", quality=95)
 
 
 def write_result(hdr_file_name, param_full_file_name):
     rgb_data = exr2array(hdr_dataset_dir+hdr_file_name)
     gray_data = rgb2gray(rgb_data)
-    # TODO: get the right syntax
-    depth_data, _ = load_pfm(hdr_file_name.replace(""))
+    depth_data, _ = load_pfm(hdr_file_name.replace(".exr", "-depth.pfm"))
 
     # state_map: 2 for lights areas, 0 for others
     # regions: array of region, region is array of coords of light pixels
@@ -124,12 +133,13 @@ def text_param2list_param(param):
 
 if __name__ == '__main__':
     # exr_files = [f for f in listdir(hdr_dataset_dir) if isfile(join(hdr_dataset_dir, f)) and f.endswith(".exr")]
+    pfm_files = [f for f in listdir(depth_files_dir) if isfile(join(depth_files_dir, f)) and f.endswith(".pfm")]
+    for file in pfm_files:
+        write_result(file.replace("-depth.pfm", ".exr"), light_param_file)
+
     # for file in exr_files:
-    #     # exr2jpg(hdr_dataset_dir+file, hdr_jpgs_dir+file.replace(".exr", ".jpg"))
-    #     # write_result(file, light_param_file)
-    #
     #     text_param = read_result(light_param_file, file)
     #     param = text_param2list_param(text_param)
     #     render_sg(param, file)
     #     print("rendered "+file)
-    pass
+    # pass
