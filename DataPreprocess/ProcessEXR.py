@@ -4,6 +4,10 @@ from os.path import isfile, join
 from scipy.ndimage.filters import gaussian_filter
 from DataPreprocess.RetrieveLights import *
 from DataPreprocess.SphericalGaussian import *
+from DataPreprocess.ProcessPFM import *
+import Imath
+
+pixel_type = Imath.PixelType(Imath.PixelType.FLOAT)
 
 
 def exr2array(full_file_name):
@@ -56,12 +60,13 @@ def exr2jpg(full_file_name, full_jpg_name):
 def write_result(hdr_file_name, param_full_file_name):
     rgb_data = exr2array(hdr_dataset_dir+hdr_file_name)
     gray_data = rgb2gray(rgb_data)
-    # jpg_rgb_data = np.asarray(Image.open(hdr_file_name.replace(".exr", ".jpg")))
+    # TODO: get the right syntax
+    depth_data, _ = load_pfm(hdr_file_name.replace(""))
 
     # state_map: 2 for lights areas, 0 for others
     # regions: array of region, region is array of coords of light pixels
     state_map, regions = retrieve_lights(gray_data, count=3, percentage=0.333)
-    param = get_parametric_lights(rgb_data, regions)
+    param = get_parametric_lights(rgb_data, depth_data, regions)
     plt.imsave(light_masks_dir+hdr_file_name.replace(".exr", "_light_mask.jpg"), state_map)
     f = open(param_full_file_name, "a")
     print(hdr_file_name)
@@ -78,9 +83,9 @@ def write_result(hdr_file_name, param_full_file_name):
 
 
 def read_result(param_file_full_name, hdr_file_name):
-    file = open(param_file_full_name, "r")
+    param_file = open(param_file_full_name, "r")
     while True:
-        line = file.readline()
+        line = param_file.readline()
         if line == '':
             print("result for {} not found.".format(hdr_file_name))
             return None
@@ -92,7 +97,8 @@ def read_result(param_file_full_name, hdr_file_name):
                 l = light_param_str.split(',')[0]
                 s = light_param_str.split(',')[1]
                 c = light_param_str.split(',')[2]
-                light_param = [l, s, c]
+                d = light_param_str.split(',')[3]
+                light_param = [l, s, c, d]
                 param.append(light_param)
             return param
         else:
@@ -105,38 +111,25 @@ def text_param2list_param(param):
         l_text = light_text_param[0]
         s_text = light_text_param[1]
         c_text = light_text_param[2]
+        d_text = light_text_param[3]
         l = np.fromstring(l_text.split('[')[1].split(']')[0], dtype=float, sep=' ')
         s = float(s_text)
         c = np.fromstring(c_text.split('[')[1].split(']')[0], dtype=float, sep=' ')
-        light_param = [l, s, c]
+        d = float(d_text)
+        light_param = [l, s, c, d]
         list_param.append(light_param)
     return list_param
 
 
 
 if __name__ == '__main__':
-    exr_files = [f for f in listdir(hdr_dataset_dir) if isfile(join(hdr_dataset_dir, f)) and f.endswith(".exr")]
-    for file in exr_files:
-        # exr2jpg(hdr_dataset_dir+file, hdr_jpgs_dir+file.replace(".exr", ".jpg"))
-        # write_result(file, light_param_file)
-
-        text_param = read_result(light_param_file, file)
-        param = text_param2list_param(text_param)
-        render_sg(param, file)
-        print("rendered "+file)
-
-        # jpg_img = pltimg.imread(hdr_jpgs_dir+file.replace(".exr", ".jpg"))
-        # mask_img = pltimg.imread(light_masks_dir+file.replace(".exr", "_light_mask.jpg"))
-        # sg_img = pltimg.imread(light_sg_renderings_dir+file.replace(".exr", "_light_sg.jpg"))
-        # fig = plt.figure()
-        # fig.add_subplot(3, 1, 1)
-        # plt.axis('off')
-        # plt.imshow(jpg_img)
-        # fig.add_subplot(3, 1, 2)
-        # plt.axis('off')
-        # plt.imshow(mask_img)
-        # fig.add_subplot(3, 1, 3)
-        # plt.axis('off')
-        # plt.imshow(sg_img)
-        # plt.show()
-
+    # exr_files = [f for f in listdir(hdr_dataset_dir) if isfile(join(hdr_dataset_dir, f)) and f.endswith(".exr")]
+    # for file in exr_files:
+    #     # exr2jpg(hdr_dataset_dir+file, hdr_jpgs_dir+file.replace(".exr", ".jpg"))
+    #     # write_result(file, light_param_file)
+    #
+    #     text_param = read_result(light_param_file, file)
+    #     param = text_param2list_param(text_param)
+    #     render_sg(param, file)
+    #     print("rendered "+file)
+    pass

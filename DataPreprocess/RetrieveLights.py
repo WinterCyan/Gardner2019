@@ -153,7 +153,7 @@ def retrieve_lights(img, count, percentage):
     return state_map, simplest_regions
 
 
-def get_parametric_lights(rgb_img_data, regions):
+def get_parametric_lights(rgb_img_data, depth_data, regions):
     param=[]
     for region in regions:
         single_param = []
@@ -164,12 +164,15 @@ def get_parametric_lights(rgb_img_data, regions):
         r = 0
         g = 0
         b = 0
+        d = 0
         for p in region:
             r = r + rgb_img_data[p[0], p[1], 0]
             g = g + rgb_img_data[p[0], p[1], 1]
             b = b + rgb_img_data[p[0], p[1], 2]
+            d = d + depth_data[p[0], p[1]]
         c = np.array([r, g, b])/len(region)
-        single_param.extend([l, s, c])  # single_param: [[l],[s],[c]]
+        d /= len(region)
+        single_param.extend([l, s, c, d])  # single_param: [[l],[s],[c],[d]]
         param.append(single_param)
-    return param  # [[array, float, array], [array, float, array], [array, float, array]]
+    return param  # [[array, float, array, float], [array, float, array, float], [array, float, array, float]]
 

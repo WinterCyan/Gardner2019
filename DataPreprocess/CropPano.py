@@ -14,10 +14,8 @@
 # limitations under the License.
 
 from math import pi
-import numpy as np
-from os import listdir
-from os.path import isfile, join
-from DataPreprocess.Consts import *
+from DataPreprocess.WarpUtils import *
+from DataPreprocess.ProcessEXR import *
 import imageio as im
 
 
@@ -96,13 +94,13 @@ class NFOV():
         DD = np.multiply(D, np.array([wd, wd, wd]).T)
         nfov = np.reshape(np.round(AA + BB + CC + DD).astype(np.uint8), [self.height, self.width, 3])
 
-        max_v = np.amax(nfov)
-        min_v = np.amin(nfov)
-        nfov = (nfov-min_v)/(max_v-min_v)
+        # max_v = np.amax(nfov)
+        # min_v = np.amin(nfov)
+        # nfov = (nfov-min_v)/(max_v-min_v)
 
-        import matplotlib.pyplot as plt
-        plt.imshow(nfov)
-        plt.show()
+        # import matplotlib.pyplot as plt
+        # plt.imshow(nfov)
+        # plt.show()
         return nfov
 
     def toNFOV(self, frame, center_point):
@@ -127,24 +125,27 @@ def crop_center2row_col(center_point):
     return row, col
 
 
-# test the class
-if __name__ == '__main__':
-    # jpg_files = [f for f in listdir(hdr_jpgs_dir) if isfile(join(hdr_jpgs_dir, f)) and f.endswith(".jpg")]
-    # file_index = random.randrange(0, len(jpg_files))
-    # print(jpg_files[file_index])
-    # img = im.imread(hdr_jpgs_dir+jpg_files[file_index])
-    img = im.imread("../Files/pano.jpg")
-    nfov = NFOV()
-    c1 = 0.5  # range [0, 2)
-    c2 = 0.5  # range [0, 1], greater than 1: upward-down
-    for i in range(10):
+nfov = NFOV()
+def get_cropped(full_jpg_file_name, count=4):
+    cropped = []
+    thetas = []
+    phis = []
+    img = im.imread(full_jpg_file_name)
+    for i in range(count):
         c1 = np.random.uniform(low=0.0, high=2.0)
         c2 = np.random.normal(loc=CROP_DISTRIB_MU, scale=CROP_DISTRIB_SIGMA)
-        print(c1, c2)
         center_point = np.array([c1, c2])  # camera center point (valid range [0,2])
         center_row, center_col = crop_center2row_col(center_point)
-        print("row, col of center: ", center_row, center_col)
-        print("theta, phi of center: ", row_col2theta_phi(center_row, center_col, WIDTH, HEIGHT))
-        nfov.toNFOV(img, center_point)
-    # center_point = np.array([c1, c2])  # camera center point (valid range [0,2])
-    # nfov.toNFOV(img, center_point)
+        crop_theta, crop_phi = row_col2theta_phi(center_row, center_col, WIDTH, HEIGHT)
+        single_cropped = nfov.toNFOV(img, center_point)
+        cropped.append(single_cropped)
+        thetas.append(crop_theta)
+        phis.append(crop_phi)
+    return {"cropped":cropped, "theta":thetas, "phi":phis}
+
+
+if __name__ == '__main__':
+    import cv2
+    exr_data = exr2array("../Files/9C4A1891-85da239af9.exr")
+    im.imwrite("../Files/pano.hdr", exr_data, format='hdr')
+

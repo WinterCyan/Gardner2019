@@ -9,7 +9,7 @@ from DataPreprocess.Consts import *
 
 
 def load_pfm(file_name):
-    file = open(file_name, 'rb')
+    file = open(depth_files_dir+file_name, 'rb')
     header = file.readline().decode('utf-8').rstrip()
     if header == 'PF':
         color = True
