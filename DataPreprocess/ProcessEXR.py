@@ -134,8 +134,9 @@ def text_param2list_param(param):
 if __name__ == '__main__':
     # exr_files = [f for f in listdir(hdr_dataset_dir) if isfile(join(hdr_dataset_dir, f)) and f.endswith(".exr")]
     pfm_files = [f for f in listdir(depth_files_dir) if isfile(join(depth_files_dir, f)) and f.endswith(".pfm")]
-    for file in pfm_files:
-        write_result(file.replace("-depth.pfm", ".exr"), light_param_file)
+    print(pfm_files)
+    # for file in pfm_files:
+    #     write_result(file.replace("-depth.pfm", ".exr"), light_param_file)
 
     # for file in exr_files:
     #     text_param = read_result(light_param_file, file)

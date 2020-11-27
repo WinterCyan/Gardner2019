@@ -128,64 +128,48 @@ def crop_center2row_col(center_point):
 nfov = NFOV()
 def get_cropped_and_param(hdr_file_name, count=4):
     origin_params = text_param2list_param(read_result(light_param_file, hdr_file_name))
-    print("old:", origin_params)
     cropped_imgs = []
-    cropped_params = []
+    cropped_thetas = []
+    cropped_phis = []
     img = im.imread(fusion_hdr_jpgs_dir+hdr_file_name.replace(".exr", ".jpg"))
     for i in range(count):
-        # c1 = np.random.uniform(low=0.0, high=2.0)
-        # c2 = np.random.normal(loc=CROP_DISTRIB_MU, scale=CROP_DISTRIB_SIGMA)
-        c1 = 0.5*i
-        c2 = 0.5
+        c1 = np.random.uniform(low=0.0, high=2.0)
+        c2 = np.random.normal(loc=CROP_DISTRIB_MU, scale=CROP_DISTRIB_SIGMA)
+        # c1 = 0.5*i
+        # c2 = 0.5
         center_point = np.array([c1, c2])  # camera center point (valid range [0,2])
         center_row, center_col = crop_center2row_col(center_point)
         crop_theta, crop_phi = row_col2theta_phi(center_row, center_col, WIDTH, HEIGHT)
         single_cropped = nfov.toNFOV(img, center_point)
         cropped_imgs.append(single_cropped)
-        rotate_params = []
-        for light_param in origin_params:
-            l, s, c, d = light_param
+        cropped_thetas.append(crop_theta)
+        cropped_phis.append(crop_phi)
+    # got imgs, thetas, phis; then render results;
+    cropped_params = []
+    for i in range(count):
+        crop_img = cropped_imgs[i]
+        plt.imsave("../Files/crop_img_"+i.__str__()+".jpg", crop_img)
+        crop_theta = cropped_thetas[i]
+        crop_phi = cropped_phis[i]
+        param = text_param2list_param(read_result(light_param_file, hdr_file_name))
+        for light_param in param:
+            l = light_param[0]
             l_theta, l_phi = xyz2theta_phi(l[0], l[1], l[2])
-            final_theta = l_theta + math.pi / 2.0 - crop_theta
+            final_theta = l_theta + math.pi/2.0 - crop_theta
             final_phi = l_phi - crop_phi
             rotate_l = theta_phi2xyz(final_theta, final_phi)
-            rotate_light_param = [rotate_l, s, c, d]
-            rotate_params.append(rotate_light_param)
-        cropped_params.append(rotate_params)
+            light_param[0] = rotate_l
+            # print(param)
+            # render_sg(param, hdr_file.replace(".exr", "_"+i.__str__()+".exr"), sg_dir="../Files/")
+            # print('---------------------------')
+        cropped_params.append(param)
     return {"imgs":cropped_imgs, "params":cropped_params}
 
 
 if __name__ == '__main__':
     hdr_file = "AG8A7692-79e4b5baea.exr"
-    crop_result = get_cropped_and_param(hdr_file)
-    cropped_imgs = crop_result["imgs"]
-    cropped_params = crop_result["params"]
-    print(cropped_params)
-    for i in range(len(cropped_params)):
-        render_sg(cropped_params[i], hdr_file.replace(".exr", "_" + i.__str__() + ".exr"), sg_dir="../Files/")
-        plt.imsave("../Files/crop_img_"+i.__str__()+".jpg", cropped_imgs[i])
-
-    # cropped = crop_results["cropped"]
-    # thetas = crop_results["thetas"]
-    # phis = crop_results["phis"]
-    # for i in range(4):
-    #     crop_img = cropped[i]
-    #     plt.imsave("../Files/crop_img_"+i.__str__()+".jpg", crop_img)
-    #     crop_theta = thetas[i]
-    #     crop_phi = phis[i]
-    #     # print("crop theta, phi: ", crop_theta, crop_phi)
-    #     param = text_param2list_param(read_result(light_param_file, hdr_file))
-    #     for light_param in param:
-    #         l = light_param[0]
-    #         # print("l: ", l)
-    #         l_theta, l_phi = xyz2theta_phi(l[0], l[1], l[2])
-    #         # print("l's theta, phi: ", l_theta, l_phi)
-    #         final_theta = l_theta + math.pi/2.0 - crop_theta
-    #         final_phi = l_phi - crop_phi
-    #         # print("rotate l's theta, phi: ", final_theta, final_phi)
-    #         rotate_l = theta_phi2xyz(final_theta, final_phi)
-    #         # print("rotate l: ", rotate_l)
-    #         light_param[0] = rotate_l
-    #         render_sg(param, hdr_file.replace(".exr", "_"+i.__str__()+".exr"), sg_dir="../Files/")
-        # print('---------------------------')
-
+    crop_results = get_cropped_and_param(hdr_file)
+    imgs = crop_results["imgs"]
+    params = crop_results["params"]
+    for i in range(len(params)):
+        render_sg(params[i], hdr_file.replace(".exr", "_"+i.__str__()+".exr"), sg_dir="../Files/")
