@@ -91,6 +91,21 @@ def write_result(hdr_file_name, param_full_file_name):
     print('------------------------------------')
 
 
+def write_crop_param(crop_name, param):
+    f = open(cropped_param_file, "a")
+    print(crop_name)
+    print(param)
+    f.write("file_"+crop_name+";")
+    for light in param:
+        f.write("light:")
+        for p in light:
+            f.write(p.__str__()+",")
+        f.write(";")
+    f.write('\n')
+    f.close()
+    print('------------------------------------')
+
+
 def read_result(param_file_full_name, hdr_file_name):
     param_file = open(param_file_full_name, "r")
     while True:
@@ -99,6 +114,29 @@ def read_result(param_file_full_name, hdr_file_name):
             print("result for {} not found.".format(hdr_file_name))
             return None
         if line.split(';')[0].split('_')[1] == hdr_file_name:
+            num_light = len(line.split(';'))-2
+            param = []
+            for i in range(num_light):
+                light_param_str = line.split(';')[i+1].split(':')[1]
+                l = light_param_str.split(',')[0]
+                s = light_param_str.split(',')[1]
+                c = light_param_str.split(',')[2]
+                d = light_param_str.split(',')[3]
+                light_param = [l, s, c, d]
+                param.append(light_param)
+            return param
+        else:
+            continue
+
+
+def read_crop_param(crop_param_file, crop_img_name):
+    param_file = open(crop_param_file, "r")
+    while True:
+        line = param_file.readline()
+        if line == '':
+            print("result for {} not found.".format(crop_img_name))
+            return None
+        if line.split(';')[0].split("file_")[1] == crop_img_name:
             num_light = len(line.split(';'))-2
             param = []
             for i in range(num_light):

@@ -18,7 +18,7 @@ else:
     np.save('../Files/map_of_u.npy', map_of_u)
 
 
-def render_sg(param, hdr_file_name, sg_dir=light_sg_renderings_dir):
+def render_sg(param, hdr_file_name, sg_file_name, sg_dir=light_sg_renderings_dir):
     pano = np.zeros((HEIGHT, WIDTH, 3))
     for light_param in param:
         l, s, c, _ = light_param
@@ -31,4 +31,4 @@ def render_sg(param, hdr_file_name, sg_dir=light_sg_renderings_dir):
     max_v = np.amax(pano)
     min_v = np.amin(pano)
     pano_corrected = (pano-min_v)/(max_v-min_v)
-    plt.imsave(sg_dir+hdr_file_name.replace(".exr", "_light_sg.jpg"), pano_corrected)
+    plt.imsave(sg_dir+sg_file_name, pano_corrected)

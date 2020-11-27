@@ -126,17 +126,19 @@ def crop_center2row_col(center_point):
 
 
 nfov = NFOV()
-def get_cropped_and_param(hdr_file_name, count=4):
-    origin_params = text_param2list_param(read_result(light_param_file, hdr_file_name))
+def get_cropped_and_param(hdr_file_name, count=8):
+    # origin_params = text_param2list_param(read_result(light_param_file, hdr_file_name))
     cropped_imgs = []
     cropped_thetas = []
     cropped_phis = []
     img = im.imread(fusion_hdr_jpgs_dir+hdr_file_name.replace(".exr", ".jpg"))
+    offset = np.random.uniform(low=0.0, high=0.25)
     for i in range(count):
-        c1 = np.random.uniform(low=0.0, high=2.0)
-        c2 = np.random.normal(loc=CROP_DISTRIB_MU, scale=CROP_DISTRIB_SIGMA)
-        # c1 = 0.5*i
-        # c2 = 0.5
+        # c1 = np.random.uniform(low=0.0, high=2.0)
+        c1 = 0.25*i+offset
+        c2 = min(0.6, np.random.normal(loc=CROP_DISTRIB_MU, scale=CROP_DISTRIB_SIGMA))
+        # c1 = 0.5108134127257686
+        # c2 = 0.65
         center_point = np.array([c1, c2])  # camera center point (valid range [0,2])
         center_row, center_col = crop_center2row_col(center_point)
         crop_theta, crop_phi = row_col2theta_phi(center_row, center_col, WIDTH, HEIGHT)
@@ -167,9 +169,13 @@ def get_cropped_and_param(hdr_file_name, count=4):
 
 
 if __name__ == '__main__':
-    hdr_file = "AG8A7692-79e4b5baea.exr"
-    crop_results = get_cropped_and_param(hdr_file)
+    # hdr_file = "AG8A7692-79e4b5baea.exr"
+    pfm_files = [f for f in listdir(depth_files_dir) if isfile(join(depth_files_dir, f)) and f.endswith(".pfm")]
+    idx = random.randrange(0, len(pfm_files))
+    hdr_file_name = pfm_files[idx].replace("-depth.pfm", ".exr")
+    print(hdr_file_name)
+    crop_results = get_cropped_and_param(hdr_file_name)
     imgs = crop_results["imgs"]
     params = crop_results["params"]
     for i in range(len(params)):
-        render_sg(params[i], hdr_file.replace(".exr", "_"+i.__str__()+".exr"), sg_dir="../Files/")
+        render_sg(params[i], hdr_file_name, i.__str__()+"_sg.jpg", sg_dir="../Files/")

@@ -24,3 +24,5 @@ hdr_jpgs_dir = data_home_dir+"HDR_results/hdr_jpgs/"
 fusion_hdr_jpgs_dir = data_home_dir+"HDR_results/fusion_hdr_jpgs/"
 single_file = hdr_dataset_dir+"AG8A8752-5cd7fafa87.exr"
 depth_files_dir = data_home_dir+'HDR_DepthFile/'
+cropped_imgs_dir =data_home_dir+'CroppedImgs/'
+cropped_param_file = data_home_dir+"HDR_results/cropped_light_param.txt"
