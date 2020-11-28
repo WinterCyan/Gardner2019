@@ -40,32 +40,9 @@ import numpy as np
 import math
 import time
 from torch.utils.data import DataLoader, random_split
+from Dataset.Dataset import *
 from Networks.Network import *
-from Dataset import MaterialDataset
-from SaveLoad import *
-
-# Core Training 5 Steps
-# output, input, loss, label are all PyTorch Variable.
-# if using GPU, send model/Tensor/Variable to GPU with cuda()
-
-# 1. output = net(input), predict the output value.
-# 2. loss = loss_function(output, label), calculate loss with loss function.
-# 3. optimizer.zero_grad(), clear previous gradients.
-# 4. loss.backward(), compute all gradients.
-# 5. optimizer.step(), perform weight update.
-
-# train details:
-# train mode -> dataloader -> train_batch, label_batch -> move to GPU -> convert to Variable
-# -> compute output and loss -> zero grad -> backward -> step -> compute summary
-
-# summary with metrics, which is a dictionary of functions that compute a metric (every several steps):
-# move output_batch, labels_batch to CPU, convert to numpy -> compute metrics -> append
-# or, in every batch training, update average loss
-# or, compute mean of all metrics
-
-# validation
-# evaluate mode -> dataloader -> data_batch, label_batch -> move to GPU -> fetch next batch
-# -> compute output and loss -> move to CPU -> compute all metrics
+from Networks.Losses import *
 
 
 if __name__ == '__main__':
@@ -74,26 +51,26 @@ if __name__ == '__main__':
     print("creating model...")
     model = ParamLENet().to(device)
     print("loading data...")
-    data =
-    split_ratio = 0.2  # ratio for validation data
+    data = LEDataset(data_dir=cropped_imgs_dir, param_file=cropped_param_file)
+    split_ratio = 0.2
     training_data, validation_data = torch.utils.data.random_split(data, [int(math.ceil(len(data)*(1.0-split_ratio))), int(math.floor(len(data)*split_ratio))])
-    training_data_loader = DataLoader(training_data, batch_size=8, pin_memory=True, shuffle=True)
-    validation_data_loader = DataLoader(validation_data, batch_size=8, pin_memory=True, shuffle=False)
-    batch_num = int(math.ceil(len(training_data)/training_data_loader.batch_size))  # 24635
-    # optimizer = torch.optim.Adam(model.parameters(), lr=1e-5)
-    in_net_renderer = InNetworkRenderer()
-    loss_func = MixLoss(renderer=in_net_renderer)
+    training_data_loader = DataLoader(training_data, batch_size=48, pin_memory=True, shuffle=True)
+    validation_data_loader = DataLoader(validation_data, batch_size=48, pin_memory=True, shuffle=False)
+    batch_num = int(math.ceil(len(training_data)/training_data_loader.batch_size))
 
-    optimizer = optim.Adam(model.parameters(), lr=1e-5)
-    ckp_path = 'modelsavings/checkpoint.pt'
-    print('loading model...')
-    model, optimizer, load_epoch = load_ckp(ckp_path, model, optimizer)  # load_epoch: [1,100]
-    print("loaded model, epoch: ", load_epoch, ", training started...")
+    optimizer = torch.optim.Adam(model.parameters(), lr=1e-5)
+    lsc_loss_func = LSCLoss()
 
-    # load_epoch = 0
+    # optimizer = optim.Adam(model.parameters(), lr=1e-5)
+    # ckp_path = 'modelsavings/checkpoint.pt'
+    # print('loading model...')
+    # model, optimizer, load_epoch = load_ckp(ckp_path, model, optimizer)  # load_epoch: [1,100]
+    # print("loaded model, epoch: ", load_epoch, ", training started...")
+
+    load_epoch = 0
 
     model.train()
-    epochs = 100
+    epochs = 150
     for epoch in range(load_epoch, epochs):
         print('----------------------training, EPOCH {}---------------------'.format(epoch+1))
         epoch_loss = 0

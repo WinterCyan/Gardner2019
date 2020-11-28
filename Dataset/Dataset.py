@@ -37,14 +37,16 @@ class LEDataset(Dataset):
             crop_param_file=self.param_file,
             crop_img_name=crop_img_name.split("/")[-1].replace(".jpg", ""))
         param = text_param2list_param(text_param)
-        return {'img': img, 'param':param}
+        for i in range(LIGHT_N - len(param)):
+            param.append([np.array([0.0,1.0,0.0]), 0.0, np.array([0.0, 0.0, 0.0]), 0.0])
+        return {'img': img, 'param': param}
 
 
 if __name__ == '__main__':
     data = LEDataset(data_dir=cropped_imgs_dir, param_file=cropped_param_file)
     split_ratio = 0.2
     training_data, validation_data = torch.utils.data.random_split(data, [int(math.ceil(len(data)*(1.0-split_ratio))), int(math.floor(len(data)*split_ratio))])
-    training_data_loader = DataLoader(training_data, batch_size=1, pin_memory=True, shuffle=True)
+    training_data_loader = DataLoader(training_data, batch_size=48, pin_memory=True, shuffle=True)
     validation_data_loader = DataLoader(validation_data, batch_size=48, pin_memory=True, shuffle=False)
     batch_num = int(math.ceil(len(training_data)/training_data_loader.batch_size))
 
