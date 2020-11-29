@@ -171,8 +171,8 @@ def text_param2list_param(param):
 
 if __name__ == '__main__':
     # exr_files = [f for f in listdir(hdr_dataset_dir) if isfile(join(hdr_dataset_dir, f)) and f.endswith(".exr")]
-    pfm_files = [f for f in listdir(depth_files_dir) if isfile(join(depth_files_dir, f)) and f.endswith(".pfm")]
-    print(pfm_files)
+    # pfm_files = [f for f in listdir(depth_files_dir) if isfile(join(depth_files_dir, f)) and f.endswith(".pfm")]
+    # print(pfm_files)
     # for file in pfm_files:
     #     write_result(file.replace("-depth.pfm", ".exr"), light_param_file)
 
@@ -182,3 +182,17 @@ if __name__ == '__main__':
     #     render_sg(param, file)
     #     print("rendered "+file)
     # pass
+    crop_img_name = "9C4A0003-e05009bcad_crop_0|[1.2112602983395249, 2.3557900627137673].jpg"
+    crop_img = im.imread('../Files/'+crop_img_name)
+    crop_img_nojpg_name = crop_img_name.split("/")[-1].split("|")[0]
+    theta_phi_string = crop_img_name.split("/")[-1].split("|")[-1].replace(".jpg", "")
+    theta_phi = np.fromstring(theta_phi_string.split(']')[0].split('[')[1], sep=',')
+    hdr_data = exr2array(hdr_dataset_dir+"9C4A0006-5133111e97.exr")
+    warp_hdr_data = warp_hdr(hdr_data, delta_theta=theta_phi[0], delta_phi=theta_phi[1])
+    print(warp_hdr_data.shape)
+    hdr_file_name = "../Files/warped_pano.hdr"
+    im.imwrite(hdr_file_name, warp_hdr_data, format='hdr')
+    hdr_data = cv2.imread(hdr_file_name, cv2.IMREAD_ANYDEPTH)
+    ldrDurand = tonemap_drago.process(hdr_data)
+    ldr_8bit = np.clip(ldrDurand * 255, 0, 255).astype('uint8')
+    cv2.imwrite(hdr_file_name.replace(".hdr", ".jpg"), ldr_8bit)

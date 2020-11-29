@@ -166,16 +166,3 @@ def get_cropped_and_param(hdr_file_name, count=8):
             # print('---------------------------')
         cropped_params.append(param)
     return {"imgs":cropped_imgs, "params":cropped_params, "thetas":cropped_thetas, "phis":cropped_phis}
-
-
-if __name__ == '__main__':
-    # hdr_file = "AG8A7692-79e4b5baea.exr"
-    pfm_files = [f for f in listdir(depth_files_dir) if isfile(join(depth_files_dir, f)) and f.endswith(".pfm")]
-    idx = random.randrange(0, len(pfm_files))
-    hdr_file_name = pfm_files[idx].replace("-depth.pfm", ".exr")
-    print(hdr_file_name)
-    crop_results = get_cropped_and_param(hdr_file_name)
-    imgs = crop_results["imgs"]
-    params = crop_results["params"]
-    for i in range(len(params)):
-        render_sg(params[i], hdr_file_name, i.__str__()+"_sg.jpg", sg_dir="../Files/")

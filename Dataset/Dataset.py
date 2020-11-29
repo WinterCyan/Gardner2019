@@ -57,7 +57,7 @@ if __name__ == '__main__':
         img_batch = sample['img']
         param_batch = sample['param']
         theta_phi_batch = sample['theta_phi']
-        # print(img_batch.shape)
+        # print(theta_phi_batch.shape)
         # print(len(param_batch))  # param_batch: 3 elem for 3 lights
         # print(len(param_batch[0]))  # param_batch[0]: 4 elem for l,s,c,d of first light
         # print(param_batch[0][0].shape)  # param_batch[0][0]: 48 l for first light in batch
