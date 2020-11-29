@@ -10,6 +10,9 @@ if __name__ == '__main__':
         crop_results = get_cropped_and_param(hdr_file_name)
         imgs = crop_results["imgs"]
         params = crop_results["params"]
+        thetas = crop_results["thetas"]
+        phis = crop_results["phis"]
         for i in range(len(imgs)):
-            plt.imsave(cropped_imgs_dir+hdr_file_name.replace(".exr", "_crop_"+i.__str__()+".jpg"), imgs[i])
+            theta_phi_string = [thetas[i], phis[i]].__str__()
+            plt.imsave(cropped_imgs_dir+hdr_file_name.replace(".exr", "_crop_"+i.__str__()+"|"+theta_phi_string.__str__()+".jpg"), imgs[i])
             write_crop_param(hdr_file_name.replace(".exr", "_crop_"+i.__str__()), params[i])

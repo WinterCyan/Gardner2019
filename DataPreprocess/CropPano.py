@@ -135,7 +135,7 @@ def get_cropped_and_param(hdr_file_name, count=8):
     offset = np.random.uniform(low=0.0, high=0.25)
     for i in range(count):
         # c1 = np.random.uniform(low=0.0, high=2.0)
-        c1 = 0.25*i+offset
+        c1 = 0.25*(i-1)
         c2 = min(0.6, np.random.normal(loc=CROP_DISTRIB_MU, scale=CROP_DISTRIB_SIGMA))
         # c1 = 0.5108134127257686
         # c2 = 0.65
@@ -165,7 +165,7 @@ def get_cropped_and_param(hdr_file_name, count=8):
             # render_sg(param, hdr_file.replace(".exr", "_"+i.__str__()+".exr"), sg_dir="../Files/")
             # print('---------------------------')
         cropped_params.append(param)
-    return {"imgs":cropped_imgs, "params":cropped_params}
+    return {"imgs":cropped_imgs, "params":cropped_params, "thetas":cropped_thetas, "phis":cropped_phis}
 
 
 if __name__ == '__main__':
