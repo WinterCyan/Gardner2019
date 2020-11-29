@@ -7,6 +7,7 @@ from torch import Tensor
 import torch.utils.checkpoint as cp
 from collections import OrderedDict
 from Networks.DenseNet import *
+from DataPreprocess.Consts import *
 
 
 class _DenseLayer(nn.Module):
@@ -176,12 +177,25 @@ class ParamLENet(nn.Module):
         #  replace the classifier with two FC layers
         latent_vec = self.latent(out)
         decode_vec = self.decoder(latent_vec)
-        d = self.d_out(decode_vec)
-        l = self.l_out(decode_vec)
-        s = self.s_out(decode_vec)
-        c = self.c_out(decode_vec)
-        a = self.a_out(decode_vec)
-        return d, l, s, c, a
+        d = self.d_out(decode_vec)  # [3], 3 float
+        l = self.l_out(decode_vec)  # [9], 3 vec
+        s = self.s_out(decode_vec)  # [3], 3 float
+        c = self.c_out(decode_vec)  # [9], 3 vec
+        a = self.a_out(decode_vec)  # [3], 1 vec
+        return [d, l, s, c, a]
+
+
+def parse_output(param):
+    d, l, s, c, a = param
+    list_param = []
+    for i in range(LIGHT_N):
+        param_l = l[3*i: 3*i+3]
+        param_c = c[3*i: 3*i+3]
+        param_s = s[i]
+        param_d = d[i]
+        light_param = [param_l, param_s, param_c, param_d]
+        list_param.append(light_param)
+    return {"light":list_param, "ambient":a}
 
 
 if __name__ == '__main__':

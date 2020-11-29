@@ -3,7 +3,7 @@ import math
 from DataPreprocess.Consts import *
 
 
-def warp(pano, target_loc):
+def warp_hdr(hdr_data, theta, phi):
     pass
 
 
