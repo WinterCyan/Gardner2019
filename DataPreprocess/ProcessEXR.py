@@ -34,13 +34,13 @@ def exr2array(full_file_name):
     return rgb_data
 
 
-def rgb2gray(rgb_data):
+def rgb2gray(rgb_data, blur=True):
     r = rgb_data[:, :, 0]
     g = rgb_data[:, :, 1]
     b = rgb_data[:, :, 2]
     gray = r * 0.2989 + g * 0.587 + b * 0.114
     blurred = gaussian_filter(gray, sigma=GAUSSIAN_KERNEL_SIZE)  # shape: [1024,2048]
-    return blurred
+    return blurred if blur else gray
 
 
 def tone_mapping(rgb_data):
@@ -66,6 +66,20 @@ def exr2jpg(hdr_file_name, full_jpg_name):
     #                        (1.055 * (rgbf[i] ** (1.0 / 2.2)) - 0.055) * 255.0)
     # rgb8 = [Image.frombytes("F", size, c.tobytes()).convert("L") for c in rgbf]
     # Image.merge("RGB", rgb8).save(full_jpg_name, "JPEG", quality=95)
+
+
+def get_threshold_ambient(hdr_data, threshold=0.05, blur=False):
+    gray_hdr_data = rgb2gray(hdr_data, blur=False)
+    peak = np.amax(gray_hdr_data)
+    light_data = np.copy(hdr_data)
+    ambient_data = np.copy(hdr_data)
+    ambient_area = gray_hdr_data<threshold*peak
+    light_data[ambient_area] = 0
+    light_area = gray_hdr_data>=threshold*peak
+    ambient_data[light_area] = 0
+    ambient = np.sum(ambient_data, axis=(0,1))/(np.count_nonzero(ambient_area)/3.0)
+    if blur: light_data = gaussian_filter(light_data, sigma=THRESH_GAUSSIAN_KERNEL_SIZE)
+    return light_data, ambient
 
 
 def write_result(hdr_file_name, param_full_file_name):
@@ -183,21 +197,17 @@ if __name__ == '__main__':
     #     render_sg(param, file)
     #     print("rendered "+file)
     # pass
-    crop_img_name = "9C4A8172-26dcee9656_crop_1|[1.6059815174311365, 1.5703918993163193].jpg"
-    crop_img = im.imread(cropped_imgs_dir+crop_img_name)
-    crop_img_nojpg_name = crop_img_name.split("/")[-1].split("|")[0]
-    theta_phi_string = crop_img_name.split("/")[-1].split("|")[-1].replace(".jpg", "")
-    theta_phi = np.fromstring(theta_phi_string.split(']')[0].split('[')[1], sep=',')
-    print(theta_phi)
-    hdr_data = exr2array(hdr_dataset_dir+"9C4A8172-26dcee9656.exr")
-    print(hdr_data.dtype)
-    warp_hdr_data = warp_hdr(hdr_data, delta_theta=theta_phi[0], delta_phi=theta_phi[1])
-    print(warp_hdr_data.dtype)
-    print(np.amax(warp_hdr_data))
-    print(np.amin(warp_hdr_data))
-    hdr_file_name = "../Files/warped_pano.hdr"
-    im.imwrite(hdr_file_name, warp_hdr_data.astype(np.float32), format='hdr')
-    hdr_data = cv2.imread(hdr_file_name, cv2.IMREAD_ANYDEPTH)
-    ldrDurand = tonemap_drago.process(hdr_data)
-    ldr_8bit = np.clip(ldrDurand * 255, 0, 255).astype('uint8')
-    cv2.imwrite(hdr_file_name.replace(".hdr", ".jpg"), ldr_8bit)
+    # crop_img_name = "AG8A9956-30e880bb24_crop_2|[1.2476587714114975, 0.7849937359188709].jpg"
+    # crop_img = im.imread(cropped_imgs_dir+crop_img_name)
+    # crop_img_nojpg_name = crop_img_name.split("/")[-1].split("|")[0]
+    # theta_phi_string = crop_img_name.split("/")[-1].split("|")[-1].replace(".jpg", "")
+    # theta_phi = np.fromstring(theta_phi_string.split(']')[0].split('[')[1], sep=',')
+    # hdr_data = exr2array(hdr_dataset_dir+"AG8A9956-30e880bb24.exr")
+    # warp_hdr_data = warp_hdr(hdr_data, delta_theta=theta_phi[0], delta_phi=theta_phi[1])
+    # hdr_file_name = "../Files/warped_pano.hdr"
+    # im.imwrite(hdr_file_name, warp_hdr_data.astype(np.float32), format='hdr')
+    # hdr_data = cv2.imread(hdr_file_name, cv2.IMREAD_ANYDEPTH)
+    # ldrDurand = tonemap_drago.process(hdr_data)
+    # ldr_8bit = np.clip(ldrDurand * 255, 0, 255).astype('uint8')
+    # cv2.imwrite(hdr_file_name.replace(".hdr", ".jpg"), ldr_8bit)
+    pass

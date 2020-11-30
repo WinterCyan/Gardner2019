@@ -179,15 +179,15 @@ def get_parametric_lights(rgb_img_data, depth_data, regions):
     return param  # [[array, float, array, float], [array, float, array, float], [array, float, array, float]]
 
 
-def get_env_ambient(warp_hdr_data):  # hdr_data: [H,W,3]
-    r = warp_hdr_data[:, :, 0]
-    g = warp_hdr_data[:, :, 1]
-    b = warp_hdr_data[:, :, 2]
-    gray_data = r * 0.2989 + g * 0.587 + b * 0.114  # shape: [H,W]
-    peak = np.amax(gray_data)
-    gt_light_env = gray_data
-    gt_ambient_env = gray_data
-    gt_light_env[gt_light_env < peak*GT_ENV_PERCENTILE] = 0
-    gt_ambient_env[gt_ambient_env >= peak*GT_ENV_PERCENTILE] = 0
-    gt_ambient = np.sum(gt_ambient_env)/np.count_nonzero(gt_ambient_env)
-    return gt_light_env, gt_ambient
+# def get_env_ambient(warp_hdr_data):  # hdr_data: [H,W,3]
+#     r = warp_hdr_data[:, :, 0]
+#     g = warp_hdr_data[:, :, 1]
+#     b = warp_hdr_data[:, :, 2]
+#     gray_data = r * 0.2989 + g * 0.587 + b * 0.114  # shape: [H,W]
+#     peak = np.amax(gray_data)
+#     gt_light_env = gray_data
+#     gt_ambient_env = gray_data
+#     gt_light_env[gt_light_env < peak*GT_ENV_PERCENTILE] = 0
+#     gt_ambient_env[gt_ambient_env >= peak*GT_ENV_PERCENTILE] = 0
+#     gt_ambient = np.sum(gt_ambient_env)/np.count_nonzero(gt_ambient_env)
+#     return gt_light_env, gt_ambient
