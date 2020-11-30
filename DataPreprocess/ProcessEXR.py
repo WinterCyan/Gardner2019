@@ -11,6 +11,7 @@ import imageio as im
 
 pixel_type = Imath.PixelType(Imath.PixelType.FLOAT)
 tonemap_drago = cv2.createTonemapDrago(2.2, 0.5)
+# im.plugins.freeimage.download()
 
 
 def exr2array(full_file_name):
@@ -182,16 +183,20 @@ if __name__ == '__main__':
     #     render_sg(param, file)
     #     print("rendered "+file)
     # pass
-    crop_img_name = "9C4A0003-e05009bcad_crop_0|[1.2112602983395249, 2.3557900627137673].jpg"
-    crop_img = im.imread('../Files/'+crop_img_name)
+    crop_img_name = "9C4A8172-26dcee9656_crop_1|[1.6059815174311365, 1.5703918993163193].jpg"
+    crop_img = im.imread(cropped_imgs_dir+crop_img_name)
     crop_img_nojpg_name = crop_img_name.split("/")[-1].split("|")[0]
     theta_phi_string = crop_img_name.split("/")[-1].split("|")[-1].replace(".jpg", "")
     theta_phi = np.fromstring(theta_phi_string.split(']')[0].split('[')[1], sep=',')
-    hdr_data = exr2array(hdr_dataset_dir+"9C4A0006-5133111e97.exr")
+    print(theta_phi)
+    hdr_data = exr2array(hdr_dataset_dir+"9C4A8172-26dcee9656.exr")
+    print(hdr_data.dtype)
     warp_hdr_data = warp_hdr(hdr_data, delta_theta=theta_phi[0], delta_phi=theta_phi[1])
-    print(warp_hdr_data.shape)
+    print(warp_hdr_data.dtype)
+    print(np.amax(warp_hdr_data))
+    print(np.amin(warp_hdr_data))
     hdr_file_name = "../Files/warped_pano.hdr"
-    im.imwrite(hdr_file_name, warp_hdr_data, format='hdr')
+    im.imwrite(hdr_file_name, warp_hdr_data.astype(np.float32), format='hdr')
     hdr_data = cv2.imread(hdr_file_name, cv2.IMREAD_ANYDEPTH)
     ldrDurand = tonemap_drago.process(hdr_data)
     ldr_8bit = np.clip(ldrDurand * 255, 0, 255).astype('uint8')

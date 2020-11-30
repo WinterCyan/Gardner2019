@@ -26,7 +26,8 @@ else:
     print("execute map_of_theta_phi calculation")
     u_x = map_of_u[:, :, 0]
     u_y = map_of_u[:, :, 1]
-    theta, phi = xyz2theta_phi(u_x, u_y, None)
+    u_z = map_of_u[:, :, 2]
+    theta, phi = xyz2theta_phi(u_x, u_y, u_z)
     expand_theta = np.expand_dims(theta, axis=2)
     expand_phi = np.expand_dims(phi, axis=2)
     map_of_theta_phi = np.concatenate((expand_theta, expand_phi), axis=2)

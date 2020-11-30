@@ -132,7 +132,7 @@ def get_cropped_and_param(hdr_file_name, count=8):
     cropped_thetas = []
     cropped_phis = []
     img = im.imread(fusion_hdr_jpgs_dir+hdr_file_name.replace(".exr", ".jpg"))
-    offset = np.random.uniform(low=0.0, high=0.25)
+    # offset = np.random.uniform(low=0.0, high=0.25)
     for i in range(count):
         # c1 = np.random.uniform(low=0.0, high=2.0)
         c1 = 0.25*(i-1)
@@ -157,7 +157,7 @@ def get_cropped_and_param(hdr_file_name, count=8):
         for light_param in param:
             l = light_param[0]
             l_theta, l_phi = xyz2theta_phi(l[0], l[1], l[2])
-            final_theta = l_theta + math.pi/2.0 - crop_theta
+            final_theta = l_theta + np.pi/2.0 - crop_theta
             final_phi = l_phi - crop_phi
             rotate_l = theta_phi2xyz(final_theta, final_phi)
             light_param[0] = rotate_l
