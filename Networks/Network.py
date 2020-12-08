@@ -163,25 +163,28 @@ class ParamLENet(nn.Module):
         # self.features.add_module('decode', nn.Linear(latent_size, decode_size))
         self.decoder = nn.Linear(latent_size, decode_size)
 
-        self.d_out = nn.Linear(decode_size, num_lights)
+        # self.d_out = nn.Linear(decode_size, num_lights)
         self.l_out = nn.Linear(decode_size, 3*num_lights)
         self.s_out = nn.Linear(decode_size, num_lights)
         self.c_out = nn.Linear(decode_size, 3*num_lights)
         self.a_out = nn.Linear(decode_size, 3)
+        self.d_out = nn.Linear(latent_size+3*num_lights, 3*num_lights)
 
     def forward(self, x):
         features = self.features(x)
         out = F.relu(features, inplace=True)
         out = F.adaptive_avg_pool2d(out, (1, 1))  # output: 1*1, average pooling over full feature map
         out = torch.flatten(out, 1)  # flatten: keep some dims and merge the others
-        #  replace the classifier with two FC layers
+        # replace the classifier with two FC layers
         latent_vec = self.latent(out)
         decode_vec = self.decoder(latent_vec)
-        d = self.d_out(decode_vec)  # [3], 3 float
+        # d = self.d_out(decode_vec)  # [3], 3 float
         l = self.l_out(decode_vec)  # [9], 3 vec
         s = self.s_out(decode_vec)  # [3], 3 float
         c = self.c_out(decode_vec)  # [9], 3 vec
         a = self.a_out(decode_vec)  # [3], 1 vec
+        z_l_cat = torch.cat([latent_vec, l])
+        d = self.d_out(z_l_cat)
         return [d, l, s, c, a]
 
 

@@ -19,10 +19,10 @@ real_transformer = transforms.Compose([
 
 
 class LEDataset(Dataset):
-    def __init__(self, data_dir, param_file):
+    def __init__(self, data_dir):
         self.filenames = os.listdir(data_dir)  # datadir: path to crop imgs
         self.filenames = [os.path.join(data_dir, f) for f in self.filenames if f.endswith('.jpg')]
-        self.param_file = param_file
+        # self.param_file = param_file
         self.transformer = transformer  # resize & to tensor
 
     def __len__(self):
@@ -48,24 +48,27 @@ class LEDataset(Dataset):
 
 
 if __name__ == '__main__':
-    data = LEDataset(data_dir=cropped_imgs_dir_partial, param_file=cropped_param_file)
+    data = LEDataset(data_dir=cropped_imgs_dir)
     split_ratio = 0.2
     training_data, validation_data = torch.utils.data.random_split(data, [int(math.ceil(len(data)*(1.0-split_ratio))), int(math.floor(len(data)*split_ratio))])
     training_data_loader = DataLoader(training_data, batch_size=48, pin_memory=True, shuffle=True)
     validation_data_loader = DataLoader(validation_data, batch_size=48, pin_memory=True, shuffle=False)
     batch_num = int(math.ceil(len(training_data)/training_data_loader.batch_size))
+    device = "cuda:0"
 
     for batch_idx, sample in enumerate(training_data_loader):
-        img_batch = sample['img']
+        img_batch = sample['img'].to(device)
         name_batch = sample['name']
-        ambient_batch = sample['ambient']
+        ambient_batch = sample['ambient'].to(device)
+        print(name_batch)
+        print(ambient_batch)
         # print(theta_phi_batch.shape)
         # print(len(param_batch))  # param_batch: 3 elem for 3 lights
         # print(len(param_batch[0]))  # param_batch[0]: 4 elem for l,s,c,d of first light
         # print(param_batch[0][0].shape)  # param_batch[0][0]: 48 l for first light in batch
-        for i in range(len(img_batch)):
-            print(name_batch[i])
-            print(ambient_batch[i])
+        # for i in range(len(img_batch)):
+        #     print(name_batch[i])
+        #     print(ambient_batch[i])
             # print(theta_phi_batch[i])
             # #                             light  lscd  batch
             # print("l of light0: ", param_batch[0][0][i])

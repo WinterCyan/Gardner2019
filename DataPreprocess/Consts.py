@@ -27,4 +27,5 @@ depth_files_dir = data_home_dir+'HDR_DepthFile/'
 cropped_imgs_dir =data_home_dir+'CroppedImgs/'
 cropped_imgs_dir_partial =data_home_dir+'CroppedImgs_partial/'
 warped_exr_dir =data_home_dir+'WarpedEXR/'
+warped_exr_jpg_dir =data_home_dir+'WarpedEXRJPG/'
 cropped_param_file = data_home_dir+"HDR_results/cropped_light_param.txt"

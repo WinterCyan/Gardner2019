@@ -7,7 +7,7 @@ from DataPreprocess.Consts import *
 
 
 class LSCLoss(nn.Module):
-    def __init__(self, weight_light=20, weight_ambient=1):
+    def __init__(self, weight_light=20.0, weight_ambient=1.0):
         super(LSCLoss, self).__init__()
         self.weight_light = weight_light
         self.weight_ambient = weight_ambient
@@ -19,4 +19,3 @@ class LSCLoss(nn.Module):
         ambient_loss = F.mse_loss(gt_ambient, estimated_ambient)
         lsc_loss = self.weight_light*light_loss + self.weight_ambient*ambient_loss
         return lsc_loss
-

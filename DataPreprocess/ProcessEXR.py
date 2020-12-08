@@ -185,17 +185,30 @@ def text_param2list_param(param):
 
 
 if __name__ == '__main__':
-    # exr_files = [f for f in listdir(hdr_dataset_dir) if isfile(join(hdr_dataset_dir, f)) and f.endswith(".exr")]
+    exr_files = [f for f in listdir(warped_exr_partial_dir) if isfile(join(warped_exr_partial_dir, f)) and f.endswith(".exr")]
     # pfm_files = [f for f in listdir(depth_files_dir) if isfile(join(depth_files_dir, f)) and f.endswith(".pfm")]
     # print(pfm_files)
     # for file in pfm_files:
     #     write_result(file.replace("-depth.pfm", ".exr"), light_param_file)
 
     # for file in exr_files:
-    #     text_param = read_result(light_param_file, file)
-    #     param = text_param2list_param(text_param)
-    #     render_sg(param, file)
-    #     print("rendered "+file)
+    #     hdr_file_name = warped_exr_dir + file
+    #     try:
+    #         hdr_data = exr2array(hdr_file_name)
+    #         im.imwrite("../Files/temp.hdr", hdr_data.astype(np.float32), format='hdr')
+    #         hdr_data = cv2.imread("../Files/temp.hdr", cv2.IMREAD_ANYDEPTH)
+    #         ldrDurand = tonemap_drago.process(hdr_data)
+    #         ldr_8bit = np.clip(ldrDurand * 255, 0, 255).astype('uint8')
+    #         cv2.imwrite("../Files/threshed_pano.jpg", ldr_8bit)
+    #         plt.imshow(plt.imread("../Files/threshed_pano.jpg"))
+    #         plt.gcf().canvas.set_window_title(file)
+    #         plt.show()
+    #     except:
+    #         print(file+" failed.")
+        # text_param = read_result(light_param_file, file)
+        # param = text_param2list_param(text_param)
+        # render_sg(param, file)
+        # print("rendered "+file)
     # pass
     # crop_img_name = "AG8A9956-30e880bb24_crop_2|[1.2476587714114975, 0.7849937359188709].jpg"
     # crop_img = im.imread(cropped_imgs_dir+crop_img_name)
@@ -204,10 +217,11 @@ if __name__ == '__main__':
     # theta_phi = np.fromstring(theta_phi_string.split(']')[0].split('[')[1], sep=',')
     # hdr_data = exr2array(hdr_dataset_dir+"AG8A9956-30e880bb24.exr")
     # warp_hdr_data = warp_hdr(hdr_data, delta_theta=theta_phi[0], delta_phi=theta_phi[1])
-    # hdr_file_name = "../Files/warped_pano.hdr"
-    # im.imwrite(hdr_file_name, warp_hdr_data.astype(np.float32), format='hdr')
+    # hdr_file_name = warped_exr_dir+"9C4A8676-1428be837d_crop_3.exr"
+    # hdr_data = exr2array(hdr_file_name)
+    # im.imwrite(hdr_file_name, hdr_data.astype(np.float32), format='hdr')
     # hdr_data = cv2.imread(hdr_file_name, cv2.IMREAD_ANYDEPTH)
     # ldrDurand = tonemap_drago.process(hdr_data)
     # ldr_8bit = np.clip(ldrDurand * 255, 0, 255).astype('uint8')
-    # cv2.imwrite(hdr_file_name.replace(".hdr", ".jpg"), ldr_8bit)
+    # cv2.imwrite("../Files/threshed_pano.jpg", ldr_8bit)
     pass

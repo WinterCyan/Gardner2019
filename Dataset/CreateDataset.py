@@ -3,19 +3,31 @@ import os
 
 
 if __name__ == '__main__':
-    cropped_imgs = [f for f in listdir(cropped_imgs_dir) if isfile(join(cropped_imgs_dir,f)) and f.endswith(".jpg")]
-    for crop_img_name in cropped_imgs:
-        crop_img_nojpg_name = crop_img_name.split("/")[-1].split("|")[0]
-        crop_img_prefix_name = crop_img_nojpg_name.split("_")[0]
-        print(crop_img_nojpg_name)
-        theta_phi_string = crop_img_name.split("/")[-1].split("|")[-1].replace(".jpg", "")
-        theta_phi = np.fromstring(theta_phi_string.split(']')[0].split('[')[1], sep=',')
-        hdr_data = exr2array(hdr_dataset_dir+crop_img_prefix_name+".exr")
-        warp_hdr_data = warp_hdr(hdr_data, delta_theta=theta_phi[0], delta_phi=theta_phi[1])
-        light_hdr_data, ambient = get_threshold_ambient(warp_hdr_data)
-        ambient_string = ambient.__str__()
-        cv2.imwrite(warped_exr_dir+crop_img_nojpg_name+".exr", light_hdr_data.astype(np.float32))
-        os.rename(cropped_imgs_dir+crop_img_name, cropped_imgs_dir+crop_img_name.replace(".jpg", "|"+ambient_string+".jpg"))
+    warped_exr_files = [f for f in listdir(warped_exr_dir) if isfile(join(warped_exr_dir,f)) and f.endswith(".exr")]
+    for file in warped_exr_files:
+        exr_data = exr2array(warped_exr_dir + file)
+        im.imwrite("../Files/temp.hdr", exr_data, format='hdr')
+        hdr_data = cv2.imread("../Files/temp.hdr", cv2.IMREAD_ANYDEPTH)
+        ldrDurand = tonemap_drago.process(hdr_data)
+        ldr_8bit = np.clip(ldrDurand * 255, 0, 255).astype('uint8')
+        cv2.imwrite(warped_exr_jpg_dir+file.replace(".exr",".jpg"), ldr_8bit)
+    # cropped_imgs = [f for f in listdir(cropped_imgs_dir) if isfile(join(cropped_imgs_dir,f)) and f.endswith(".jpg")]
+    # threshed_hdr = [f for f in listdir(warped_exr_dir) if isfile(join(warped_exr_dir,f)) and f.endswith(".exr")]
+    # for crop_img_name in cropped_imgs:
+    #     if "]|[" in crop_img_name:
+    #         print("skip ", crop_img_name)
+    #         continue
+    #     crop_img_nojpg_name = crop_img_name.split("/")[-1].split("|")[0]
+    #     crop_img_prefix_name = crop_img_nojpg_name.split("_")[0]
+    #     print(crop_img_nojpg_name)
+    #     theta_phi_string = crop_img_name.split("/")[-1].split("|")[-1].replace(".jpg", "")
+    #     theta_phi = np.fromstring(theta_phi_string.split(']')[0].split('[')[1], sep=',')
+    #     hdr_data = exr2array(hdr_dataset_dir+crop_img_prefix_name+".exr")
+    #     warp_hdr_data = warp_hdr(hdr_data, delta_theta=theta_phi[0], delta_phi=theta_phi[1])
+    #     light_hdr_data, ambient = get_threshold_ambient(warp_hdr_data)
+    #     ambient_string = ambient.__str__()
+    #     cv2.imwrite(warped_exr_dir+crop_img_nojpg_name+".exr", light_hdr_data.astype(np.float32))
+    #     os.rename(cropped_imgs_dir+crop_img_name, cropped_imgs_dir+crop_img_name.replace(".jpg", "|"+ambient_string+".jpg"))
 
 
     # pfm_files = [f for f in listdir(depth_files_dir) if isfile(join(depth_files_dir, f)) and f.endswith(".pfm")]
