@@ -23,25 +23,27 @@ class LSCLoss(nn.Module):
                 gt_ambient_batch,
                 estimated_ambient_batch):  # get the hdr_data, theta, phi from name & file
         light_loss = 0
-        print("estimated params on device: ", estimated_l_batch.device)
         for batch_idx in range(BATCH_SIZE):
             # get single light_env, move to GPU
             gt_light_env_name = gt_light_env_name_batch[batch_idx]
             gt_light_env = exr2array(warped_exr_dir+gt_light_env_name+".exr")
-            gt_light_evn_tensor = torch.Tensor(gt_light_env).permute(2,0,1).to(device)  # [3,H,W]
+            gt_light_env_tensor = torch.Tensor(gt_light_env).permute(2,0,1).to(device)  # [3,H,W]
 
             # calculate single sg_env in GPU
             single_img_l = estimated_l_batch[batch_idx]  # 9
-            single_img_s = estimated_s_batch[batch_idx]  # 3
+            single_img_s = estimated_s_batch[batch_idx].to('cpu')  # 3
             single_img_c = estimated_c_batch[batch_idx]  # 9
-            single_img_l.reshape(3, 3)  # [3,3]
-            single_img_c.reshape(3, 3)  # [3,3]
-            sg_light_env_tensor = render_sg_tensor(single_img_l, single_img_s, single_img_c)
-            print(sg_light_env_tensor.shape)
+            single_img_l = single_img_l.reshape(3, 3).to('cpu')  # [3,3]
+            # normalize l
+            l_length = torch.sqrt((single_img_l**2.0).sum(1, keepdim=True))
+            single_img_l = torch.div(single_img_l, l_length)
+            single_img_c = single_img_c.reshape(3, 3).to('cpu')  # [3,3]
+            sg_light_env_tensor = render_sg_tensor(single_img_l, single_img_s, single_img_c).to(device)
 
             # calculate loss
-            sample_light_loss = F.mse_loss(gt_light_evn_tensor, sg_light_env_tensor)
-            light_loss += sample_light_loss
+            sample_light_loss = F.mse_loss(gt_light_env_tensor, sg_light_env_tensor)
+            light_loss += float(sample_light_loss)
+            # light_loss += sample_light_loss
         # light_loss = F.mse_loss(gt_light_env_batch, sg_light_env_batch)
         ambient_loss = F.mse_loss(gt_ambient_batch, estimated_ambient_batch)
         lsc_loss = self.weight_light*light_loss + self.weight_ambient*ambient_loss

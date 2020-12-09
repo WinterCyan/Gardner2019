@@ -180,11 +180,11 @@ class ParamLENet(nn.Module):
         decode_vec = self.decoder(latent_vec)
         # d = self.d_out(decode_vec)  # [3], 3 float
         l = self.l_out(decode_vec)  # [9], 3 vec
-        s = self.s_out(decode_vec)  # [3], 3 float
-        c = self.c_out(decode_vec)  # [9], 3 vec
-        a = self.a_out(decode_vec)  # [3], 1 vec
+        s = self.s_out(decode_vec).clamp_min(0.0001)  # [3], 3 float
+        c = self.c_out(decode_vec).clamp_min(0.0)  # [9], 3 vec
+        a = self.a_out(decode_vec).clamp_min(0.0)  # [3], 1 vec
         z_l_cat = torch.cat([latent_vec, l], dim=1)
-        d = self.d_out(z_l_cat)
+        d = self.d_out(z_l_cat).clamp_min(0.0001)
         return [d, l, s, c, a]
 
 

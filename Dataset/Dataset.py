@@ -10,7 +10,9 @@ from DataPreprocess.CropPano import get_cropped_and_param
 from DataPreprocess.ProcessEXR import read_crop_param, text_param2list_param, exr2array
 from DataPreprocess.Consts import *
 
-transformer = transforms.Compose([transforms.ToTensor()])
+transformer = transforms.Compose([
+    transforms.Resize(256),
+    transforms.ToTensor()])
 real_transformer = transforms.Compose([
     transforms.Resize(256),
     transforms.ToTensor()

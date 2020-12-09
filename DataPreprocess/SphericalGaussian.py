@@ -8,7 +8,7 @@ import torch
 map_of_u = np.zeros((HEIGHT, WIDTH, 3))
 if (isfile('../Files/map_of_u.npy')):
     print("loaded map_of_u")
-    map_of_u = torch.Tensor(np.load('../Files/map_of_u.npy')).permute(2,0,1).to(device)
+    map_of_u = torch.Tensor(np.load('../Files/map_of_u.npy')).permute(2,0,1)
 else:
     print("executed map_of_u calculation")
     for row in range(HEIGHT):
@@ -17,12 +17,12 @@ else:
             u = theta_phi2xyz(theta, phi)
             map_of_u[row, col, :] = u
     np.save('../Files/map_of_u.npy', map_of_u)
-    map_of_u = torch.Tensor(np.load('../Files/map_of_u.npy')).permute(2,0,1).to(device)
+    map_of_u = torch.Tensor(np.load('../Files/map_of_u.npy')).permute(2,0,1)
 
 
 if (isfile('../Files/map_of_theta_phi.npy')):
     print("loaded map_of_theta_phi")
-    map_of_theta_phi = torch.Tensor(np.load('../Files/map_of_theta_phi.npy')).permute(2,0,1).to(device)
+    map_of_theta_phi = torch.Tensor(np.load('../Files/map_of_theta_phi.npy')).permute(2,0,1)
 else:
     print("execute map_of_theta_phi calculation")
     u_x = map_of_u[:, :, 0]
@@ -33,7 +33,7 @@ else:
     expand_phi = np.expand_dims(phi, axis=2)
     map_of_theta_phi = np.concatenate((expand_theta, expand_phi), axis=2)
     np.save('../Files/map_of_theta_phi.npy', map_of_theta_phi)
-    map_of_theta_phi = torch.Tensor(np.load('../Files/map_of_theta_phi.npy')).permute(2,0,1).to(device)
+    map_of_theta_phi = torch.Tensor(np.load('../Files/map_of_theta_phi.npy')).permute(2,0,1)
 
 
 def render_sg(param, sg_file_name, sg_dir=light_sg_renderings_dir, save_sg=True):
@@ -55,22 +55,27 @@ def render_sg(param, sg_file_name, sg_dir=light_sg_renderings_dir, save_sg=True)
 
 
 def render_sg_tensor(ls, ss, cs):  # [l1,l2,l3], [s1,s2,s3], [c1,c2,c3]
-    print("rendering sg...")
-    pano = torch.zeros((3, HEIGHT, WIDTH)).to(device)
+    pano = torch.zeros((3, HEIGHT, WIDTH))
     for i in range(LIGHT_N):
-        l = ls[i]
+        l = ls[i].unsqueeze(-1).unsqueeze(-1)  # [3,1,1]
+        # print("l: ", l)
         s = ss[i]
-        c = cs[i]
-        print(l,s,c, " on ", device)
-        print("map_of_u on: ", map_of_u.device)
+        # print("s: ", s)
+        c = cs[i].unsqueeze(-1).unsqueeze(-1)  # [3,1,1]
+        # print("c: ", c)
         l_dot_u = torch.mul(map_of_u, l).sum(0, keepdim=True)  # [1,H,W]
         expo = (l_dot_u - 1.0) / (s / (4 * np.pi))  # [1,H,W]
         single_channel_weight = torch.exp(expo)  # [1,H,W]
         repeat_weight = single_channel_weight.repeat(3,1,1)  # [3,H,W]
         single_light_pano = torch.mul(repeat_weight, c)  # [3,H,W]
         pano = pano + single_light_pano
-        torch.cuda.empty_cache()
-    print("rendering done.")
+    # np_pano = pano.permute(1,2,0).detach().numpy()
+    # max_v = np.amax(np_pano)
+    # min_v = np.amin(np_pano)
+    # pano_corrected = (np_pano - min_v) / (max_v - min_v)
+    # plt.imsave("../Files/temppano.jpg", pano_corrected)
+    # print("saved.")
+    # print("max of sg pano: ", torch.max(pano))
     return pano
 
 #

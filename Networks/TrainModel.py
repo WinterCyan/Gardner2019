@@ -54,15 +54,11 @@ if __name__ == '__main__':
         for batch_idx, sample in enumerate(training_data_loader):
             # load data
             img_batch = sample["img"].to(device)
-            print("loaded img_batch")
             gt_ambient_batch = sample["gt_ambient"].to(device)
-            print("loaded gt_ambient_batch")
             gt_light_env_name_batch = sample["gt_light_env_name"]
-            print("loaded gt_light_env_name_batch")
             # estimate
             torch.cuda.empty_cache()
             estimated_param_batch = model(img_batch)  # net_output: list of length 5: [d,l,s,c,a]; [N,3],[N,9],[N,3],[N,9],[N,3]
-            print("network estimated param")
             estimated_d_batch = estimated_param_batch[0].to(device)  # shape: [N,9]
             estimated_l_batch = estimated_param_batch[1].to(device)  # shape: [N,9]
             estimated_s_batch = estimated_param_batch[2].to(device)  # shape: [N,3]
