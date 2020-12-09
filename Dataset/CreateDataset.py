@@ -5,12 +5,15 @@ import os
 if __name__ == '__main__':
     warped_exr_files = [f for f in listdir(warped_exr_dir) if isfile(join(warped_exr_dir,f)) and f.endswith(".exr")]
     for file in warped_exr_files:
+        # if not OpenEXR.isOpenExrFile(warped_exr_dir+file):
+        #     print("not read")
         exr_data = exr2array(warped_exr_dir + file)
         im.imwrite("../Files/temp.hdr", exr_data, format='hdr')
         hdr_data = cv2.imread("../Files/temp.hdr", cv2.IMREAD_ANYDEPTH)
         ldrDurand = tonemap_drago.process(hdr_data)
         ldr_8bit = np.clip(ldrDurand * 255, 0, 255).astype('uint8')
         cv2.imwrite(warped_exr_jpg_dir+file.replace(".exr",".jpg"), ldr_8bit)
+
     # cropped_imgs = [f for f in listdir(cropped_imgs_dir) if isfile(join(cropped_imgs_dir,f)) and f.endswith(".jpg")]
     # threshed_hdr = [f for f in listdir(warped_exr_dir) if isfile(join(warped_exr_dir,f)) and f.endswith(".exr")]
     # for crop_img_name in cropped_imgs:

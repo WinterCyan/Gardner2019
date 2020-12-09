@@ -52,3 +52,9 @@ def xyz2theta_phi(x, y, z):
     theta = np.arccos(y)
     phi = np.arctan2(x, z)  # quadrant awareness
     return theta, phi
+
+
+def delta_between_l(l1, l2):
+    l1 = l1/np.linalg.norm(l1)
+    l2 = l2/np.linalg.norm(l2)
+    return np.arccos(np.dot(l1, l2))

@@ -185,7 +185,7 @@ def text_param2list_param(param):
 
 
 if __name__ == '__main__':
-    exr_files = [f for f in listdir(warped_exr_partial_dir) if isfile(join(warped_exr_partial_dir, f)) and f.endswith(".exr")]
+    exr_files = [f for f in listdir(warped_exr_dir) if isfile(join(warped_exr_dir, f)) and f.endswith(".exr")]
     # pfm_files = [f for f in listdir(depth_files_dir) if isfile(join(depth_files_dir, f)) and f.endswith(".pfm")]
     # print(pfm_files)
     # for file in pfm_files:

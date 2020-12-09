@@ -7,8 +7,7 @@ from PIL import Image
 from PIL import ImageFile
 import torchvision.transforms as transforms
 from DataPreprocess.CropPano import get_cropped_and_param
-from DataPreprocess.ProcessEXR import read_crop_param
-from DataPreprocess.ProcessEXR import text_param2list_param
+from DataPreprocess.ProcessEXR import read_crop_param, text_param2list_param, exr2array
 from DataPreprocess.Consts import *
 
 transformer = transforms.Compose([transforms.ToTensor()])
@@ -28,6 +27,18 @@ class LEDataset(Dataset):
     def __len__(self):
         return len(self.filenames)
 
+    # def __getitem__(self, idx):
+    #     crop_img_name = self.filenames[idx]
+    #     img = Image.open(crop_img_name)  # open jpg file
+    #     img = self.transformer(img)  # [Nc, 3, 256, 256]
+    #
+    #     crop_img_nojpg_name = crop_img_name.split("/")[-1].split("|")[0]
+    #     ambient_string = crop_img_name.split("/")[-1].split("|")[-1].replace(".jpg", "")
+    #     ambient = np.fromstring(ambient_string.split(']')[0].split('[')[1], sep=' ')
+    #     print("getting gt_light_env...")
+    #     gt_light_env = exr2array(warped_exr_dir+crop_img_nojpg_name+".exr")
+    #     return {'img': img, 'gt_light_env':gt_light_env, 'gt_ambient':ambient}
+
     def __getitem__(self, idx):
         crop_img_name = self.filenames[idx]
         img = Image.open(crop_img_name)  # open jpg file
@@ -35,16 +46,10 @@ class LEDataset(Dataset):
 
         crop_img_nojpg_name = crop_img_name.split("/")[-1].split("|")[0]
         ambient_string = crop_img_name.split("/")[-1].split("|")[-1].replace(".jpg", "")
-        # theta_phi_string = crop_img_name.split("/")[-1].split("|")[-1].replace(".jpg", "")
         ambient = np.fromstring(ambient_string.split(']')[0].split('[')[1], sep=' ')
-        # text_param = read_crop_param(
-        #     crop_param_file=self.param_file,
-        #     crop_img_name=crop_img_nojpg_name)
-        # param = text_param2list_param(text_param)
-        # for i in range(LIGHT_N - len(param)):
-        #     param.append([np.array([0.0, 0.0, 0.0]), 0.0, np.array([0.0, 0.0, 0.0]), 0.0])
-        # return {'img': img, 'param':param, 'theta_phi':theta_phi}
-        return {'img': img, 'name':crop_img_nojpg_name, 'ambient':ambient}
+        ambient = torch.Tensor(ambient)
+        # gt_light_env = exr2array(warped_exr_dir+crop_img_nojpg_name+".exr")
+        return {'img': img, 'gt_light_env_name':crop_img_nojpg_name, 'gt_ambient':ambient}
 
 
 if __name__ == '__main__':

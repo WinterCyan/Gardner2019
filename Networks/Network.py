@@ -168,7 +168,7 @@ class ParamLENet(nn.Module):
         self.s_out = nn.Linear(decode_size, num_lights)
         self.c_out = nn.Linear(decode_size, 3*num_lights)
         self.a_out = nn.Linear(decode_size, 3)
-        self.d_out = nn.Linear(latent_size+3*num_lights, 3*num_lights)
+        self.d_out = nn.Linear(latent_size+3*num_lights, num_lights)
 
     def forward(self, x):
         features = self.features(x)
@@ -183,7 +183,7 @@ class ParamLENet(nn.Module):
         s = self.s_out(decode_vec)  # [3], 3 float
         c = self.c_out(decode_vec)  # [9], 3 vec
         a = self.a_out(decode_vec)  # [3], 1 vec
-        z_l_cat = torch.cat([latent_vec, l])
+        z_l_cat = torch.cat([latent_vec, l], dim=1)
         d = self.d_out(z_l_cat)
         return [d, l, s, c, a]
 
@@ -202,41 +202,51 @@ def parse_output(param):
 
 
 if __name__ == '__main__':
-    pretrained_densenet121 = torch.hub.load('pytorch/vision:v0.6.0', 'densenet121', pretrained=True)
+    pretrained_densenet121 = torch.hub.load('pytorch/vision:v0.6.0', 'densenet121', pretrained=True).to(device)
     pretrained_densenet121_dict = pretrained_densenet121.state_dict()
-    paramlenet = ParamLENet()
-    init_paramlenet = ParamLENet()
+
+    init_paramlenet = ParamLENet().to(device)
+    init_paramlenet_dict = init_paramlenet.state_dict()
+
+    paramlenet = ParamLENet().to(device)
     paramlenet_dict = paramlenet.state_dict()
     shared_weights = {k:v for k, v in pretrained_densenet121_dict.items() if k in paramlenet_dict}
     paramlenet_dict.update(shared_weights)
     paramlenet.load_state_dict(paramlenet_dict)
 
-    # print(len(pretrained_dict.items()))
-    # print(len(my_dict.items()))
-    # print(init_net121.state_dict()['features.denseblock4.denselayer16.norm2.weight'])
-    # print(net121.state_dict()['features.denseblock4.denselayer16.norm2.weight'])
-    # print(init_net121.state_dict()['classifier.bias'])
-    # print(net121.state_dict()['classifier.bias'])
-    # print('---------pretrained----------')
-    # for k, v in pretrained_dict.items():
-    #     print(k)
-    # print('---------my----------')
-    # for k, v in my_dict.items():
-    #     print(k)
+    # print(len(pretrained_densenet121_dict.items()))
+    # print(len(paramlenet_dict.items()))
+    # print(pretrained_densenet121.state_dict()['features.denseblock4.denselayer16.norm2.weight'])
+    # print(pretrained_densenet121.state_dict()['features.denseblock4.denselayer16.norm2.weight'])
+    # print(pretrained_densenet121.state_dict()['classifier.bias'])
+    # print(paramlenet.state_dict()['classifier.bias'])
+    print('---------pretrained dense 121----------')
+    for k, v in pretrained_densenet121_dict.items():
+        print(k)
+    print('---------my init----------')
+    for k, v in init_paramlenet_dict.items():
+        print(k)
+    print('---------my updated----------')
+    for k, v in paramlenet_dict.items():
+        print(k)
 
-    # input_img = Image.open('../Files/dog.jpg')
-    # preprocess = transforms.Compose([
-    #     transforms.Resize(256),
-    #     transforms.CenterCrop(224),
-    #     transforms.ToTensor(),
-    #     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-    # ])
-    # input_tensor = preprocess(input_img)
-    # input_batch = input_tensor.unsqueeze(0)
-    # input_batch = input_batch.to('cuda')
-    # paramlenet.to('cuda')
-    # d, l, s, c, a = paramlenet(input_batch)
-    # init_paramlenet.to('cuda')
-    # d2, l2, s2, c2, a2 = init_paramlenet(input_batch)
-    # print(d, l, s, c, a)
-    # print(d2, l2, s2, c2, a2)
+    input_img = Image.open('../Files/dog.jpg')
+    preprocess = transforms.Compose([
+        transforms.Resize(256),
+        transforms.CenterCrop(224),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+    ])
+    # input_tensor = preprocess(input_img).unsqueeze(0)
+    input_tensor = preprocess(input_img)
+    # input_tensor = input_tensor.repeat(48,1,1,1)
+    input_batch = input_tensor.unsqueeze(0).to(device)
+
+    d2, l2, s2, c2, a2 = init_paramlenet(input_batch)
+    print("init: ", d2, l2, s2, c2, a2)
+
+    d, l, s, c, a = paramlenet(input_batch)
+    print("updated: ", d, l, s, c, a)
+
+    densenet121_output = pretrained_densenet121(input_batch)
+    print("densenet121: ", densenet121_output.shape)
