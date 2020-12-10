@@ -27,21 +27,24 @@ class LSCLoss(nn.Module):
             # get single light_env, move to GPU
             gt_light_env_name = gt_light_env_name_batch[batch_idx]
             gt_light_env = exr2array(warped_exr_dir+gt_light_env_name+".exr")
-            gt_light_env_tensor = torch.Tensor(gt_light_env).permute(2,0,1).to(device)  # [3,H,W]
+            # gt_light_env_tensor = torch.Tensor(gt_light_env).permute(2,0,1).to(device)  # [3,H,W]
+            gt_light_env_tensor = torch.Tensor(gt_light_env).permute(2,0,1).unsqueeze(0).to(device)
+            gt_light_env_tensor_resize = F.interpolate(gt_light_env_tensor, size=(RESIZE_H, RESIZE_W), mode='bilinear', align_corners=True)
+            gt_light_env_tensor_resize = gt_light_env_tensor_resize.squeeze(0)
 
             # calculate single sg_env in GPU
             single_img_l = estimated_l_batch[batch_idx]  # 9
-            single_img_s = estimated_s_batch[batch_idx].to('cpu')  # 3
+            single_img_s = estimated_s_batch[batch_idx]  # 3
             single_img_c = estimated_c_batch[batch_idx]  # 9
-            single_img_l = single_img_l.reshape(3, 3).to('cpu')  # [3,3]
+            single_img_l = single_img_l.reshape(3, 3)  # [3,3]
             # normalize l
             l_length = torch.sqrt((single_img_l**2.0).sum(1, keepdim=True))
             single_img_l = torch.div(single_img_l, l_length)
-            single_img_c = single_img_c.reshape(3, 3).to('cpu')  # [3,3]
-            sg_light_env_tensor = render_sg_tensor(single_img_l, single_img_s, single_img_c).to(device)
+            single_img_c = single_img_c.reshape(3, 3)  # [3,3]
+            sg_light_env_tensor = render_sg_tensor(single_img_l, single_img_s, single_img_c)
 
             # calculate loss
-            sample_light_loss = F.mse_loss(gt_light_env_tensor, sg_light_env_tensor)
+            sample_light_loss = F.mse_loss(gt_light_env_tensor_resize, sg_light_env_tensor)
             light_loss += float(sample_light_loss)
             # light_loss += sample_light_loss
         # light_loss = F.mse_loss(gt_light_env_batch, sg_light_env_batch)

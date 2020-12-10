@@ -2,13 +2,14 @@ from matplotlib import pyplot as plt
 from DataPreprocess.Consts import *
 from os.path import isfile
 from DataPreprocess.WarpUtils import *
+import time
 import torch
 
 
 map_of_u = np.zeros((HEIGHT, WIDTH, 3))
 if (isfile('../Files/map_of_u.npy')):
     print("loaded map_of_u")
-    map_of_u = torch.Tensor(np.load('../Files/map_of_u.npy')).permute(2,0,1)
+    map_of_u = torch.Tensor(np.load('../Files/map_of_u.npy')).permute(2,0,1).to(device)
 else:
     print("executed map_of_u calculation")
     for row in range(HEIGHT):
@@ -18,6 +19,21 @@ else:
             map_of_u[row, col, :] = u
     np.save('../Files/map_of_u.npy', map_of_u)
     map_of_u = torch.Tensor(np.load('../Files/map_of_u.npy')).permute(2,0,1)
+
+
+map_of_u_resize = np.zeros((RESIZE_H, RESIZE_W, 3))
+if (isfile('../Files/map_of_u_resize.npy')):
+    print("loaded map_of_u_resize")
+    map_of_u_resize = torch.Tensor(np.load('../Files/map_of_u_resize.npy')).permute(2,0,1).to(device)
+else:
+    print("executed map_of_u_resize calculation")
+    for row in range(RESIZE_H):
+        for col in range(RESIZE_W):
+            theta, phi = row_col2theta_phi(row, col, RESIZE_W, RESIZE_H)
+            u = theta_phi2xyz(theta, phi)
+            map_of_u_resize[row, col, :] = u
+    np.save('../Files/map_of_u_resize.npy', map_of_u_resize)
+    map_of_u_resize = torch.Tensor(np.load('../Files/map_of_u_resize.npy')).permute(2,0,1).to(device)
 
 
 if (isfile('../Files/map_of_theta_phi.npy')):
@@ -55,15 +71,12 @@ def render_sg(param, sg_file_name, sg_dir=light_sg_renderings_dir, save_sg=True)
 
 
 def render_sg_tensor(ls, ss, cs):  # [l1,l2,l3], [s1,s2,s3], [c1,c2,c3]
-    pano = torch.zeros((3, HEIGHT, WIDTH))
+    pano = torch.zeros((3, RESIZE_H, RESIZE_W)).to(device)
     for i in range(LIGHT_N):
-        l = ls[i].unsqueeze(-1).unsqueeze(-1)  # [3,1,1]
-        # print("l: ", l)
-        s = ss[i]
-        # print("s: ", s)
-        c = cs[i].unsqueeze(-1).unsqueeze(-1)  # [3,1,1]
-        # print("c: ", c)
-        l_dot_u = torch.mul(map_of_u, l).sum(0, keepdim=True)  # [1,H,W]
+        l = ls[i].unsqueeze(-1).unsqueeze(-1).to(device)  # [3,1,1]
+        s = ss[i].to(device).to(device)
+        c = cs[i].unsqueeze(-1).unsqueeze(-1).to(device)  # [3,1,1]
+        l_dot_u = torch.mul(map_of_u_resize, l).sum(0, keepdim=True)  # [1,H,W]
         expo = (l_dot_u - 1.0) / (s / (4 * np.pi))  # [1,H,W]
         single_channel_weight = torch.exp(expo)  # [1,H,W]
         repeat_weight = single_channel_weight.repeat(3,1,1)  # [3,H,W]
