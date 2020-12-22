@@ -1,3 +1,4 @@
+import time
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -26,11 +27,14 @@ class LSCLoss(nn.Module):
         for batch_idx in range(BATCH_SIZE):
             # get single light_env, move to GPU
             gt_light_env_name = gt_light_env_name_batch[batch_idx]
+            t1 = time.time()
             gt_light_env = exr2array(warped_exr_dir+gt_light_env_name+".exr")
             # gt_light_env_tensor = torch.Tensor(gt_light_env).permute(2,0,1).to(device)  # [3,H,W]
             gt_light_env_tensor = torch.Tensor(gt_light_env).permute(2,0,1).unsqueeze(0).to(device)
             gt_light_env_tensor_resize = F.interpolate(gt_light_env_tensor, size=(RESIZE_H, RESIZE_W), mode='bilinear', align_corners=True)
             gt_light_env_tensor_resize = gt_light_env_tensor_resize.squeeze(0)
+            t2 = time.time()
+            print("load light env time: ", t2-t1)
 
             # calculate single sg_env in GPU
             single_img_l = estimated_l_batch[batch_idx]  # 9
