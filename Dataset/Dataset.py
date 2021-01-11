@@ -50,8 +50,12 @@ class LEDataset(Dataset):
         ambient_string = crop_img_name.split("/")[-1].split("|")[-1].replace(".jpg", "")
         ambient = np.fromstring(ambient_string.split(']')[0].split('[')[1], sep=' ')
         ambient = torch.Tensor(ambient)
-        # gt_light_env = exr2array(warped_exr_dir+crop_img_nojpg_name+".exr")
-        return {'img': img, 'gt_light_env_name':crop_img_nojpg_name, 'gt_ambient':ambient}
+
+
+        gt_light_env = exr2array(resized_warped_exr_dir+crop_img_nojpg_name+".exr")
+        gt_light_env = torch.Tensor(gt_light_env).permute(2, 0, 1)
+        # return {'img': img, 'gt_light_env_name':crop_img_nojpg_name, 'gt_ambient':ambient}
+        return {'img': img, 'gt_light_env': gt_light_env, 'gt_ambient': ambient}  # cropped img + light env + ambient
 
 
 if __name__ == '__main__':

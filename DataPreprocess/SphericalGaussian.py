@@ -71,7 +71,6 @@ def render_sg(param, sg_file_name, sg_dir=light_sg_renderings_dir, save_sg=True)
 
 
 def render_sg_tensor(ls, ss, cs):  # [l1,l2,l3], [s1,s2,s3], [c1,c2,c3]
-    t1 = time.time()
     pano = torch.zeros((3, RESIZE_H, RESIZE_W)).to(device)
     # TODO: calculate as whole
     # or TODO: calculate batch as whole
@@ -92,8 +91,6 @@ def render_sg_tensor(ls, ss, cs):  # [l1,l2,l3], [s1,s2,s3], [c1,c2,c3]
     # plt.imsave("../Files/temppano.jpg", pano_corrected)
     # print("saved.")
     # print("max of sg pano: ", torch.max(pano))
-    t2 = time.time()
-    print("render sg time: ", t2-t1)
     return pano
 
 #

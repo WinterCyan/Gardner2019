@@ -3,10 +3,11 @@ import shutil
 
 
 def save_ckp(state, is_best, ckp_dir, best_model_dir):
-    fpath = ckp_dir+'/checkpoint.pt'
+    fpath = ckp_dir+'checkpoint.pt'
+    # torch.save(state, fpath)
     torch.save(state, fpath)
     if is_best:
-        best_fpath = best_model_dir/'best_model.pth'
+        best_fpath = best_model_dir+'best_model.pth'
         shutil.copyfile(fpath, best_fpath)
 
 

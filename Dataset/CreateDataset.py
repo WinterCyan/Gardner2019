@@ -1,19 +1,32 @@
 from DataPreprocess.CropPano import *
+import torch
+import torch.nn.functional as F
+import cv2
 import os
 
 
 if __name__ == '__main__':
-    warped_exr_files = [f for f in listdir(warped_exr_dir) if isfile(join(warped_exr_dir,f)) and f.endswith(".exr")]
-    for file in warped_exr_files:
-        # if not OpenEXR.isOpenExrFile(warped_exr_dir+file):
-        #     print("not read")
+    warped_exrs = [f for f in listdir(warped_exr_dir) if isfile(join(warped_exr_dir, f)) and f.endswith(".exr")]
+    # warped_exr_files = [f for f in listdir(warped_exr_dir) if isfile(join(warped_exr_dir,f)) and f.endswith(".exr")]
+    for file in warped_exrs:
+    #     # if not OpenEXR.isOpenExrFile(warped_exr_dir+file):
+    #     #     print("not read")
+        print(file)
         exr_data = exr2array(warped_exr_dir + file)
-        im.imwrite("../Files/temp.hdr", exr_data, format='hdr')
-        hdr_data = cv2.imread("../Files/temp.hdr", cv2.IMREAD_ANYDEPTH)
-        ldrDurand = tonemap_drago.process(hdr_data)
-        ldr_8bit = np.clip(ldrDurand * 255, 0, 255).astype('uint8')
-        cv2.imwrite(warped_exr_jpg_dir+file.replace(".exr",".jpg"), ldr_8bit)
+        exr_data_tensor = torch.Tensor(exr_data).permute(2,0,1).unsqueeze(0)
+        exr_data_tensor_resize =  F.interpolate(exr_data_tensor, size=(RESIZE_H, RESIZE_W), mode='bilinear', align_corners=True)
+        exr_data_tensor_resize = exr_data_tensor_resize.squeeze(0)  # [3, H, W]
+        exr_data_tensor = exr_data_tensor_resize.permute(1,2,0)
+        exr_data = exr_data_tensor.cpu().numpy()
+        cv2.imwrite(resized_warped_exr_dir+file, exr_data.astype(np.float32))
+    #
+    #     im.imwrite("../Files/temp.hdr", exr_data, format='hdr')
+    #     hdr_data = cv2.imread("../Files/temp.hdr", cv2.IMREAD_ANYDEPTH)
+    #     ldrDurand = tonemap_drago.process(hdr_data)
+    #     ldr_8bit = np.clip(ldrDurand * 255, 0, 255).astype('uint8')
+    #     cv2.imwrite(warped_exr_jpg_dir+file.replace(".exr",".jpg"), ldr_8bit)
 
+    # TODO: resize warped pano
     # cropped_imgs = [f for f in listdir(cropped_imgs_dir) if isfile(join(cropped_imgs_dir,f)) and f.endswith(".jpg")]
     # threshed_hdr = [f for f in listdir(warped_exr_dir) if isfile(join(warped_exr_dir,f)) and f.endswith(".exr")]
     # for crop_img_name in cropped_imgs:

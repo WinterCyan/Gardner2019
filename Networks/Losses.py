@@ -12,29 +12,31 @@ from DataPreprocess.WarpUtils import delta_between_l
 
 
 class LSCLoss(nn.Module):
-    def __init__(self, weight_light=20.0, weight_ambient=1.0):
+    def __init__(self, weight_light=0.8, weight_ambient=0.2):
         super(LSCLoss, self).__init__()
         self.weight_light = weight_light
         self.weight_ambient = weight_ambient
 
-    def forward(self, gt_light_env_name_batch,
+    def forward(self,
+                gt_light_env_batch,
                 estimated_l_batch,
                 estimated_s_batch,
                 estimated_c_batch,
                 gt_ambient_batch,
-                estimated_ambient_batch):  # get the hdr_data, theta, phi from name & file
+                estimated_a_batch):  # get the hdr_data, theta, phi from name & file
         light_loss = 0
-        for batch_idx in range(BATCH_SIZE):
+        for batch_idx in range(gt_light_env_batch.shape[0]):
             # get single light_env, move to GPU
-            gt_light_env_name = gt_light_env_name_batch[batch_idx]
-            t1 = time.time()
-            gt_light_env = exr2array(warped_exr_dir+gt_light_env_name+".exr")
-            # gt_light_env_tensor = torch.Tensor(gt_light_env).permute(2,0,1).to(device)  # [3,H,W]
-            gt_light_env_tensor = torch.Tensor(gt_light_env).permute(2,0,1).unsqueeze(0).to(device)
-            gt_light_env_tensor_resize = F.interpolate(gt_light_env_tensor, size=(RESIZE_H, RESIZE_W), mode='bilinear', align_corners=True)
-            gt_light_env_tensor_resize = gt_light_env_tensor_resize.squeeze(0)
-            t2 = time.time()
-            print("load light env time: ", t2-t1)
+            # gt_light_env_name = gt_light_env_name_batch[batch_idx]
+            gt_light_env = gt_light_env_batch[batch_idx]
+            # t1 = time.time()
+            # gt_light_env = exr2array(warped_exr_dir+gt_light_env_name+".exr")
+            # # gt_light_env_tensor = torch.Tensor(gt_light_env).permute(2,0,1).to(device)  # [3,H,W]
+            # gt_light_env_tensor = torch.Tensor(gt_light_env).permute(2,0,1).unsqueeze(0).to(device)
+            # gt_light_env_tensor_resize = F.interpolate(gt_light_env_tensor, size=(RESIZE_H, RESIZE_W), mode='bilinear', align_corners=True)
+            # gt_light_env_tensor_resize = gt_light_env_tensor_resize.squeeze(0)
+            # t2 = time.time()
+            # print("load light env time: ", t2-t1)
 
             # calculate single sg_env in GPU
             single_img_l = estimated_l_batch[batch_idx]  # 9
@@ -48,11 +50,11 @@ class LSCLoss(nn.Module):
             sg_light_env_tensor = render_sg_tensor(single_img_l, single_img_s, single_img_c)
 
             # calculate loss
-            sample_light_loss = F.mse_loss(gt_light_env_tensor_resize, sg_light_env_tensor)
+            sample_light_loss = F.mse_loss(gt_light_env, sg_light_env_tensor)
             light_loss += float(sample_light_loss)
             # light_loss += sample_light_loss
         # light_loss = F.mse_loss(gt_light_env_batch, sg_light_env_batch)
-        ambient_loss = F.mse_loss(gt_ambient_batch, estimated_ambient_batch)
+        ambient_loss = F.mse_loss(gt_ambient_batch, estimated_a_batch)
         lsc_loss = self.weight_light*light_loss + self.weight_ambient*ambient_loss
         return lsc_loss
 

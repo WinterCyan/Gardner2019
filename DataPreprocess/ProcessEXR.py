@@ -18,19 +18,14 @@ def exr2array(full_file_name):
     data = OpenEXR.InputFile(full_file_name)
     data_window = data.header()['dataWindow']
     size = (data_window.max.x - data_window.min.x + 1, data_window.max.y - data_window.min.y + 1)
-    r_str = data.channel('R', pixel_type)
-    r_data = np.frombuffer(r_str, dtype=np.float32)
-    r_data.shape = (size[1], size[0])
+    # (r_str, g_str, b_str) = data.channels('RGB', pixel_type)
+    d_rgb = data.channels('RGB', pixel_type)
+    # r_data = np.frombuffer(r_str, dtype=np.float32).reshape(size[1],size[0])
+    # g_data = np.frombuffer(g_str, dtype=np.float32).reshape(size[1],size[0])
+    # b_data = np.frombuffer(b_str, dtype=np.float32).reshape(size[1],size[0])
+    # rgb_data = np.stack((r_data, g_data, b_data), axis=-1)  # shape: [1024,2048,3]
 
-    g_str = data.channel('G', pixel_type)
-    g_data = np.frombuffer(g_str, dtype=np.float32)
-    g_data.shape = (size[1], size[0])
-
-    b_str = data.channel('B', pixel_type)
-    b_data = np.frombuffer(b_str, dtype=np.float32)
-    b_data.shape = (size[1], size[0])
-
-    rgb_data = np.stack((r_data, g_data, b_data), axis=-1)  # shape: [1024,2048,3]
+    rgb_data = np.stack((np.frombuffer(d, dtype=np.float32).reshape(size[1],size[0]) for d in d_rgb), axis=-1)
     return rgb_data
 
 

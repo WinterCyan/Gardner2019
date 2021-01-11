@@ -16,6 +16,7 @@ if __name__ == '__main__':
     pretrained_densenet121_dict = pretrained_densenet121.state_dict()
     model = ParamLENet().to(device)
     # init_paramlenet = ParamLENet()
+
     paramlenet_dict = model.state_dict()
     shared_weights = {k:v for k, v in pretrained_densenet121_dict.items() if k in paramlenet_dict}
     paramlenet_dict.update(shared_weights)
@@ -42,7 +43,7 @@ if __name__ == '__main__':
     training_data_loader = DataLoader(training_data, batch_size=BATCH_SIZE, pin_memory=True, shuffle=True)
     validation_data_loader = DataLoader(validation_data, batch_size=BATCH_SIZE, pin_memory=True, shuffle=False)
     batch_num = int(math.ceil(len(training_data)/training_data_loader.batch_size))
-    print(batch_num)
+    print("batch num: ", batch_num)
 
     load_epoch = 0
 
@@ -53,31 +54,25 @@ if __name__ == '__main__':
         epoch_loss = 0
         epoch_start_time = time.time()
         for batch_idx, sample in enumerate(training_data_loader):
-            batch_start_time = time.time()
             # load data
             img_batch = sample["img"].to(device)
             gt_ambient_batch = sample["gt_ambient"].to(device)
-            gt_light_env_name_batch = sample["gt_light_env_name"]
+            gt_light_env_batch = sample["gt_light_env"].to(device)
             # estimate
-            t1 = time.time()
             estimated_param_batch = model(img_batch)  # net_output: list of length 5: [d,l,s,c,a]; [N,3],[N,9],[N,3],[N,9],[N,3]
-            t2 = time.time()
-            print("estimate time: ", t2-t1)
             estimated_d_batch = estimated_param_batch[0].to(device)  # shape: [N,9]
             estimated_l_batch = estimated_param_batch[1].to(device)  # shape: [N,9]
             estimated_s_batch = estimated_param_batch[2].to(device)  # shape: [N,3]
             estimated_c_batch = estimated_param_batch[3].to(device)  # shape: [N,9]
             estimated_a_batch = estimated_param_batch[4].to(device)  # shape: [N,3]
             # calculate loss
-            t1 = time.time()
-            lsc_loss = lsc_loss_func(gt_light_env_name_batch,
+            lsc_loss = lsc_loss_func(gt_light_env_batch,
                                      estimated_l_batch,
                                      estimated_s_batch,
                                      estimated_c_batch,
                                      gt_ambient_batch,
                                      estimated_a_batch)
             t2 = time.time()
-            print("loss calculation time: ", t2-t1)
             epoch_loss += lsc_loss.item()
             optimizer.zero_grad()
             lsc_loss.backward()
@@ -88,8 +83,6 @@ if __name__ == '__main__':
                 print("Epoch {:d}, Batch {:d}...".format(epoch+1, batch_idx+1))
             if batch_idx == batch_num-1:
                 print("Epoch {:d}, Batch {:d}...".format(epoch+1, batch_idx+1))
-            batch_end_time = time.time()
-            print("batch time: ", batch_end_time - batch_start_time)
         epoch_end_time = time.time()
         epoch_time = epoch_end_time-epoch_start_time
         print('----------------------EPOCH{}---------------------'.format(epoch+1))
@@ -101,6 +94,6 @@ if __name__ == '__main__':
             'optimizer': optimizer.state_dict()
         }
         is_best = True if epoch == epochs-1 else False
-        save_ckp(checkpoint, is_best, 'modelsavings', 'modelsavings')
+        save_ckp(checkpoint, is_best, modelsaving_dir, modelsaving_dir)
         print('model saved, epoch: ', epoch+1)
         print('--------------------------------------------------')
