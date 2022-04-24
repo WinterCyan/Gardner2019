@@ -1,4 +1,5 @@
 import OpenEXR
+from scipy.ndimage.filters import gaussian_filter
 from os import listdir
 from os.path import isfile, join
 from scipy.ndimage.filters import gaussian_filter
@@ -101,6 +102,19 @@ def write_result(hdr_file_name, param_full_file_name):
     print('------------------------------------')
 
 
+def getLightSemanticMap(hdr_file_name:str, count:int, percentage:float):
+    rgb_data = exr2array(hdr_dataset_dir+hdr_file_name)
+    # blurred = gaussian_filter(rgb_data, sigma=7)
+    gray_data = rgb2gray(rgb_data)
+    # depth_data, _ = load_pfm(hdr_file_name.replace(".exr", "-depth.pfm"))
+
+    # state_map: 2 for lights areas, 0 for others
+    # regions: array of region, region is array of coords of light pixels
+    state_map, _ = retrieve_lights(gray_data, count, percentage)
+    return state_map
+
+
+
 def write_crop_param(crop_name, param):
     f = open(cropped_param_file, "a")
     print(crop_name)
@@ -180,7 +194,14 @@ def text_param2list_param(param):
 
 
 if __name__ == '__main__':
-    exr_files = [f for f in listdir(warped_exr_dir) if isfile(join(warped_exr_dir, f)) and f.endswith(".exr")]
+    exr_files = [f for f in listdir(hdr_dataset_dir) if isfile(join(hdr_dataset_dir,f)) and f.endswith(".exr")]
+    for f in exr_files[:100]:
+        print(f)
+        semantic_map = getLightSemanticMap(f, 4, 0.333)
+        plt.imsave(light_masks_dir+f.replace(".exr", "_light_semantic_map.jpg"), semantic_map)
+
+
+    # exr_files = [f for f in listdir(warped_exr_dir) if isfile(join(warped_exr_dir, f)) and f.endswith(".exr")]
     # pfm_files = [f for f in listdir(depth_files_dir) if isfile(join(depth_files_dir, f)) and f.endswith(".pfm")]
     # print(pfm_files)
     # for file in pfm_files:
@@ -200,10 +221,10 @@ if __name__ == '__main__':
     #         plt.show()
     #     except:
     #         print(file+" failed.")
-        # text_param = read_result(light_param_file, file)
-        # param = text_param2list_param(text_param)
-        # render_sg(param, file)
-        # print("rendered "+file)
+    #     text_param = read_result(light_param_file, file)
+    #     param = text_param2list_param(text_param)
+    #     render_sg(param, file)
+    #     print("rendered "+file)
     # pass
     # crop_img_name = "AG8A9956-30e880bb24_crop_2|[1.2476587714114975, 0.7849937359188709].jpg"
     # crop_img = im.imread(cropped_imgs_dir+crop_img_name)
@@ -219,4 +240,4 @@ if __name__ == '__main__':
     # ldrDurand = tonemap_drago.process(hdr_data)
     # ldr_8bit = np.clip(ldrDurand * 255, 0, 255).astype('uint8')
     # cv2.imwrite("../Files/threshed_pano.jpg", ldr_8bit)
-    pass
+    # pass
