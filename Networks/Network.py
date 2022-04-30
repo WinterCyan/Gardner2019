@@ -178,6 +178,8 @@ class ParamLENet(nn.Module):
         # replace the classifier with two FC layers
         latent_vec = self.latent(out)
         decode_vec = self.decoder(latent_vec)
+        
+        # !!! ------ issue here ------ !!!
         # d = self.d_out(decode_vec)  # [3], 3 float
         l = self.l_out(decode_vec)  # [9], 3 vec
         s = self.s_out(decode_vec).clamp_min(0.0001)  # [3], 3 float
@@ -185,6 +187,7 @@ class ParamLENet(nn.Module):
         a = self.a_out(decode_vec).clamp_min(0.0)  # [3], 1 vec
         z_l_cat = torch.cat([latent_vec, l], dim=1)
         d = self.d_out(z_l_cat).clamp_min(0.0001)
+        # !!! ------ issue here ------ !!!
         return [d, l, s, c, a]
 
 
