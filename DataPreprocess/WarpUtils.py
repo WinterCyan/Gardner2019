@@ -17,10 +17,10 @@ def warp_hdr(hdr_data, delta_theta, delta_phi):
     return warp_hdr_data
 
 
-# def row_col2theta_phi(row, col, width, height):
-#     theta = ((row+0.5)/height)*np.pi
-#     phi = (0.5 - (col+0.5)/width)*2.0*np.pi
-#     return theta, phi
+def row_col2theta_phi(row, col, width, height):
+    theta = ((row+0.5)/height)*np.pi
+    phi = (0.5 - (col+0.5)/width)*2.0*np.pi
+    return theta, phi
 
 
 # def theta_phi2row_col(theta, phi, width, height):

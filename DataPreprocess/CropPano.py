@@ -14,20 +14,21 @@
 # limitations under the License.
 
 from math import pi
+import imageio
 from DataPreprocess.WarpUtils import *
 from DataPreprocess.ProcessEXR import *
 import imageio as im
 
 
 class NFOV():
-    def __init__(self, height=SIZE_CROP, width=SIZE_CROP):
-        self.FOV = [0.8, 0.8]
+    def __init__(self, height=SIZE_CROP):
+        self.FOV = [1.0, 0.75]
         # self.FOV = [0.38, 0.38]
         self.PI = pi
         self.PI_2 = pi * 0.5
         self.PI2 = pi * 2.0
-        self.height = height
-        self.width = width
+        self.height = 900
+        self.width = 1200
         self.screen_points = self._get_screen_img()
 
     def _get_coord_rad(self, isCenterPt, center_point=None):
@@ -58,7 +59,7 @@ class NFOV():
 
         return np.array([lon, lat]).T
 
-    def _bilinear_interpolation(self, screen_coord):
+    def _bilinear_interpolation(self, screen_coord, is_hdr):
         uf = np.mod(screen_coord.T[0],1) * self.frame_width  # long - width
         vf = np.mod(screen_coord.T[1],1) * self.frame_height  # lat - height
 
@@ -92,7 +93,10 @@ class NFOV():
         BB = np.multiply(B, np.array([wb, wb, wb]).T)
         CC = np.multiply(C, np.array([wc, wc, wc]).T)
         DD = np.multiply(D, np.array([wd, wd, wd]).T)
-        nfov = np.reshape(np.round(AA + BB + CC + DD).astype(np.uint8), [self.height, self.width, 3])
+        if is_hdr:
+            nfov = np.reshape(AA + BB + CC + DD, [self.height, self.width, 3])
+        else:
+            nfov = np.reshape(np.round(AA + BB + CC + DD).astype(np.float32), [self.height, self.width, 3])
 
         # max_v = np.amax(nfov)
         # min_v = np.amin(nfov)
@@ -103,7 +107,7 @@ class NFOV():
         # plt.show()
         return nfov
 
-    def toNFOV(self, frame, center_point):
+    def toNFOV(self, frame, center_point, is_hdr):
         self.frame = frame
         self.frame_height = frame.shape[0]
         self.frame_width = frame.shape[1]
@@ -112,7 +116,7 @@ class NFOV():
         self.cp = self._get_coord_rad(center_point=center_point, isCenterPt=True)
         convertedScreenCoord = self._get_coord_rad(isCenterPt=False)
         spericalCoord = self._calcSphericaltoGnomonic(convertedScreenCoord)
-        return self._bilinear_interpolation(spericalCoord)
+        return self._bilinear_interpolation(spericalCoord, is_hdr)
 
 
 def crop_center2row_col(center_point):
@@ -166,3 +170,51 @@ def get_cropped_and_param(hdr_file_name, count=8):
             # print('---------------------------')
         cropped_params.append(param)
     return {"imgs":cropped_imgs, "params":cropped_params, "thetas":cropped_thetas, "phis":cropped_phis}
+
+def crop_ldr_segmap(ldr_img, segmap, count=8):
+    cropped_ldr = []
+    cropped_segmap = []
+    for i in range(count):
+        c1 = 0.25*(i-1)  # (-0.25, 0, 0.25, 0.5, ..., 1.5), total: 8
+        c2 = min(0.8, np.random.normal(loc=CROP_DISTRIB_MU, scale=CROP_DISTRIB_SIGMA))
+        center_point = np.array([c1, c2])  # camera center point (valid range [0,2])
+        center_row, center_col = crop_center2row_col(center_point)
+        crop_theta, crop_phi = row_col2theta_phi(center_row, center_col, WIDTH, HEIGHT)
+        partial_ldr = nfov.toNFOV(ldr_img, center_point)
+        partial_segmap = nfov.toNFOV(segmap, center_point)
+        cropped_ldr.append(partial_ldr)
+        cropped_segmap.append(partial_segmap)
+
+    fig = plt.figure(figsize=(36,6))
+    for i in range(count):
+        fig.add_subplot(2,count,i+1).imshow(cropped_ldr[i])
+        fig.add_subplot(2,count,count+i+1).imshow(cropped_segmap[i])
+    plt.show()
+
+
+
+if __name__ == '__main__':
+    # filesnames = [f for f in listdir(light_masks_dir) if isfile(join(light_masks_dir,f)) and f.endswith(".jpg")]
+    # random.shuffle(filesnames)
+    # for f in filesnames[:5]:
+    #     name = f[:19]
+    #     print(name)
+    #     ldr_img = plt.imread(fusion_hdr_jpgs_dir+name+".jpg")
+    #     print(ldr_img.shape)
+        # segmap = plt.imread(light_masks_dir+name+"_light_semantic_map.jpg")
+        # crop_ldr_segmap(ldr_img, segmap)
+
+    filesnames = [f for f in listdir(hdr_dataset_dir) if isfile(join(hdr_dataset_dir,f)) and f.endswith(".exr")]
+    random.shuffle(filesnames)
+    for f in filesnames[:5]:
+        name = f[:-4]
+        print(name)
+        # ldr_img = plt.imread(fusion_hdr_jpgs_dir+name+".jpg")
+        hdr_img = exr2array(hdr_dataset_dir+f)
+        print(hdr_img.shape)
+        # segmap = plt.imread(light_masks_dir+name+"_light_semantic_map.jpg")
+        # crop_ldr_segmap(ldr_img, segmap)
+        partial = nfov.toNFOV(hdr_img, np.array([0.65,0.5]), True).astype('float32')
+        # print(partial.max())
+        imageio.imwrite(f,partial)
+

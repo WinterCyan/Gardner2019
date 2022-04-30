@@ -197,7 +197,9 @@ if __name__ == '__main__':
     exr_files = [f for f in listdir(hdr_dataset_dir) if isfile(join(hdr_dataset_dir,f)) and f.endswith(".exr")]
     for f in exr_files[:100]:
         print(f)
-        semantic_map = getLightSemanticMap(f, 4, 0.333)
+        semantic_map = getLightSemanticMap(f, 5, 0.4)
+        # plt.imshow(semantic_map)
+        # plt.show()
         plt.imsave(light_masks_dir+f.replace(".exr", "_light_semantic_map.jpg"), semantic_map)
 
 

@@ -25,7 +25,7 @@ hdr_dataset_dir = data_home_dir+"IndoorHDRDataset2018/"
 hdr_dataset_hdrformat_dir = data_home_dir+"IndoorHDRDataset2018/HDRFormat/"
 light_param_file = data_home_dir+"HDR_results/light_param.txt"
 light_sg_renderings_dir = data_home_dir+"HDR_results/light_sg_renderings/"
-# light_masks_dir = data_home_dir+"HDR_results/light_masks/"
+light_masks_dir_old = data_home_dir+"HDR_results/light_masks/"
 light_masks_dir = data_home_dir+"HDR_results/light_semantic_maps/"
 fusion_hdr_jpgs_dir = data_home_dir+"HDR_results/fusion_hdr_jpgs/"
 ldr_dir = data_home_dir+"HDR_results/ldr_conversions/"
@@ -37,3 +37,8 @@ resized_warped_exr_dir =data_home_dir+'ResizedWarpedEXR/'
 warped_exr_jpg_dir =data_home_dir+'WarpedEXRJPG/'
 cropped_param_file = data_home_dir+"HDR_results/cropped_light_param.txt"
 modelsaving_dir = '/home/winter/code/Gardner2019/modelsavings/'
+
+# for seg dataset
+seg_dataset_dir = data_home_dir+"SegDataset/"
+ldr_imgs = seg_dataset_dir+"ldr_imgs/"
+seg_labels = seg_dataset_dir+"seg_labels/"
