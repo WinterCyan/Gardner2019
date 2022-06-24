@@ -96,7 +96,7 @@ class NFOV():
         if is_hdr:
             nfov = np.reshape(AA + BB + CC + DD, [self.height, self.width, 3])
         else:
-            nfov = np.reshape(np.round(AA + BB + CC + DD).astype(np.float32), [self.height, self.width, 3])
+            nfov = np.reshape(np.round(AA + BB + CC + DD).astype(np.uint8), [self.height, self.width, 3])
 
         # max_v = np.amax(nfov)
         # min_v = np.amin(nfov)

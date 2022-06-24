@@ -1,16 +1,20 @@
 import os
 import imageio
 import cv2
+import matplotlib.pyplot as plt
+
 os.environ['OPENCV_IO_ENABLE_OPENEXR'] = 'true'
 import numpy as np
 from Consts import *
 from os.path import *
 from os import listdir
+from ProcessEXR import exr2array
 
 
 def hdr2ldr(hdr_file_name):
-    hdr = cv2.imread(hdr_dataset_dir+hdr_file_name, flags=cv2.IMREAD_ANYDEPTH)
-    print(hdr.shape)
+    # hdr = cv2.imread(hdr_dataset_dir+hdr_file_name)
+    hdr = exr2array(hdr_dataset_dir+hdr_file_name)
+    print(type(hdr[0][0][0]))
 
     # clamp
     # ldr = np.clip(hdr,0.0,1.0)
@@ -18,15 +22,15 @@ def hdr2ldr(hdr_file_name):
     # ldr = 255.0 * ldr
 
     # drago
-    # tonemap = cv2.createTonemapDrago(2.2)
-    # scale = 5
-    # ldr = scale * tonemap.process(hdr)
+    tonemap = cv2.createTonemapDrago(2.2)
+    ldr = tonemap.process(hdr)
+    ldr = np.clip(ldr*255,0,255).astype('uint8')
 
     # imageio
-    hdr = imageio.imread(hdr_dataset_dir+hdr_file_name)
-    ldr = np.clip(hdr, 0, 1)
-    ldr = ldr**(1/2.2)
-    ldr = 255.0 * ldr
+    # hdr = imageio.imread(hdr_dataset_dir+hdr_file_name)
+    # ldr = np.clip(hdr, 0, 1)
+    # ldr = ldr**(1/2.2)
+    # ldr = 255.0 * ldr
 
     return ldr
 
@@ -36,4 +40,6 @@ if __name__ == '__main__':
     for f in exr_files[:100]:
         print(f)
         ldr = hdr2ldr(f)
-        cv2.imwrite(ldr_dir+f.replace(".exr", "_ldr.jpg"), ldr)
+        plt.imshow(ldr)
+        plt.show()
+        # cv2.imwrite(ldr_dir+f.replace(".exr", "_ldr.jpg"), ldr)

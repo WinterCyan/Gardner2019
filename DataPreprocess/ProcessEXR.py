@@ -1,4 +1,5 @@
 import OpenEXR
+import numpy as np
 from scipy.ndimage.filters import gaussian_filter
 from os import listdir
 from os.path import isfile, join
@@ -195,12 +196,22 @@ def text_param2list_param(param):
 
 if __name__ == '__main__':
     exr_files = [f for f in listdir(hdr_dataset_dir) if isfile(join(hdr_dataset_dir,f)) and f.endswith(".exr")]
-    for f in exr_files[:100]:
+    for f in exr_files:
         print(f)
-        semantic_map = getLightSemanticMap(f, 5, 0.4)
+        semantic_map = getLightSemanticMap(f, 5, 0.4).astype('uint8')
+        # binary_map = np.ones_like(semantic_map)
+        # binary_map[np.argmin(semantic_map)] = 0
+        # print(np.unique(binary_map))
+        # binary_segmap = np.clip(semantic_map * 1000, 0, 255)
+        binary_segmap = np.clip(semantic_map*260, 0, 255).astype('uint8')
+        # print(np.unique(binary_segmap))
+        # print(semantic_map.shape)
+        # print(type(semantic_map))
+        # print(type(semantic_map[0][0]))
         # plt.imshow(semantic_map)
         # plt.show()
-        plt.imsave(light_masks_dir+f.replace(".exr", "_light_semantic_map.jpg"), semantic_map)
+        # plt.imsave(light_masks_dir+f.replace(".exr", "_light_semantic_map.jpg"), binary_segmap)
+        Image.fromarray(binary_segmap).save(light_masks_dir+f.replace(".exr", "_light_semantic_map.png"))
 
 
     # exr_files = [f for f in listdir(warped_exr_dir) if isfile(join(warped_exr_dir, f)) and f.endswith(".exr")]
